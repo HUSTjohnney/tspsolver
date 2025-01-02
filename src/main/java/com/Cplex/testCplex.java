@@ -3,7 +3,7 @@ package com.Cplex;
 import ilog.concert.*;
 import ilog.cplex.*;
 
-public class test {
+public class testCplex {
 
     public static void main(String[] args) {
         try {

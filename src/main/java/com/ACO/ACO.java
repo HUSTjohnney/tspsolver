@@ -66,7 +66,7 @@ public class ACO {
 		// 读取数据
 		TspProblem problem = TspProblem.read(filename, cityNum);
 		distance = problem.getDist();
-	
+
 		// 初始化信息素矩阵
 		pheromone = new float[cityNum][cityNum];
 		for (int i = 0; i < cityNum; i++) {
@@ -146,7 +146,7 @@ public class ACO {
 		System.out.println("The optimal length is: " + bestLength);
 		System.out.println("The optimal tour is: ");
 		for (int i = 0; i < cityNum + 1; i++) {
-			System.out.print(bestTour[i]+"->");
+			System.out.print(bestTour[i] + "->");
 		}
 	}
 
