@@ -1,4 +1,4 @@
-package com.PSO;
+package com.pso;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;

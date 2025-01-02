@@ -1,4 +1,4 @@
-package com.GA;
+package com.ga;
 
 import java.util.Random;
 import java.util.Vector;

@@ -1,4 +1,4 @@
-package com.Tabu;
+package com.tabu;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -6,33 +6,69 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class TS {
-	/** �������� */
+import com.TspPlan;
+import com.TspProblem;
+import com.TspSolver;
+
+/**
+ * @Description: 禁忌搜索算法，求解结果是有问题的。
+ */
+public class TS implements TspSolver {
+	/**
+	 * 迭代次数
+	 */
 	private int MAX_GEN;
-	/** ÿ�������ھӸ��� */
+
+	/**
+	 * 邻域个数
+	 */
 	private int neighbourhoodNum;
-	/** ���ɳ��� */
+
+	/**
+	 * 禁忌表长度
+	 */
 	private int tabuTableLength;
-	/** �ڵ����������볤�� */
+
+	/**
+	 * 节点个数
+	 */
 	private int nodeNum;
-	/** �ڵ�������� */
+
+	/**
+	 * 节点间距离
+	 */
 	private int[][] nodeDistance;
-	/** ��ǰ·�� */
+
+	/**
+	 * 当前路径
+	 */
 	private int[] route;
-	/** ��õ�·�� */
+
+	/**
+	 * 最佳路径
+	 */
 	public int[] bestRoute;
-	/** ���·���ܳ��� */
-	private int bestEvaluation;
-	/** ���ɱ� */
+
+	/**
+	 * 最佳路径长度
+	 */
+	private int bestcost;
+
+	/**
+	 * 禁忌表
+	 */
 	private int[][] tabuTable;
-	/** ���ɱ��е�����ֵ */
+
+	/**
+	 * 禁忌表评价值
+	 */
 	private int[] tabuTableEvaluate;
 
-	private long tp;
-
-	public TS() {
+	public TS(TspProblem p) {
+		// TODO Auto-generated constructor stub
 
 	}
 
@@ -115,12 +151,13 @@ public class TS {
 
 		route = new int[nodeNum];
 		bestRoute = new int[nodeNum];
-		bestEvaluation = Integer.MAX_VALUE;
+		bestcost = Integer.MAX_VALUE;
 		tabuTable = new int[tabuTableLength][nodeNum];
 		tabuTableEvaluate = new int[tabuTableLength];
 		for (int i = 0; i < tabuTableEvaluate.length; i++) {
 			tabuTableEvaluate[i] = Integer.MAX_VALUE;
 		}
+		data.close();
 	}
 
 	/** ���ɳ�ʼȺ�� */
@@ -171,8 +208,8 @@ public class TS {
 	public int[] getNeighbourhood(int[] route) {
 		int temp;
 		int ran1, ran2;
-		int[] tempRoute = new int[route.length];
-		copyGh(route, tempRoute);
+		int[] tempRoute = Arrays.copyOf(route, route.length);
+
 		ran1 = (int) (Math.random() * nodeNum);
 		do {
 			ran2 = (int) (Math.random() * nodeNum);
@@ -194,8 +231,7 @@ public class TS {
 		int[] tempRoute = null;
 		boolean iscontinue;
 		for (int i = 0; i < tempNeighbourhoodNum; i++) {
-			tempRoute = new int[route.length];
-			copyGh(route, tempRoute);
+			tempRoute = Arrays.copyOf(route, route.length);
 			do {
 				iscontinue = false;
 				// �������һ������;
@@ -281,7 +317,7 @@ public class TS {
 		// �µ�·��������ɱ�
 		if (tempValue < tabuTableEvaluate[maxValueIndex]) {
 			if (tabuTableEvaluate[maxValueIndex] < Integer.MAX_VALUE) {
-				copyGh(tabuTable[maxValueIndex], route);
+				route = Arrays.copyOf(tabuTable[maxValueIndex], tabuTable[maxValueIndex].length);
 			}
 			System.out.println("���Ե㣺���½��ɱ���maxValueIndex= " + maxValueIndex);
 			for (int k = 0; k < nodeNum; k++) {
@@ -310,9 +346,9 @@ public class TS {
 		// ��ʼ������Ghh
 		generateInitGroup();
 		// ����ǰ·����Ϊ���·��
-		copyGh(route, bestRoute);
+		bestRoute = Arrays.copyOf(route, route.length);
 		currentBestRouteEvaluation = evaluate(route);
-		bestEvaluation = currentBestRouteEvaluation;
+		bestcost = currentBestRouteEvaluation;
 		System.out.println("2.��������....");
 		while (currentIterateNum < MAX_GEN) {
 			for (int i = 0; i < route.length; i++) {
@@ -327,18 +363,19 @@ public class TS {
 				neighbourhoodEvaluation = evaluate(neighbourhoodOfRoute);
 				// System.out.println("���ԣ�neighbourhoodOfRoute="+neighbourhoodEvaluation);
 				if (neighbourhoodEvaluation < currentBestRouteEvaluation) {
-					copyGh(neighbourhoodOfRoute, currentBestRoute);
+					currentBestRoute = Arrays.copyOf(neighbourhoodOfRoute, neighbourhoodOfRoute.length);
+
 					currentBestRouteEvaluation = neighbourhoodEvaluation;
 					// System.out.println("���ԣ�neighbourhoodOfRoute="+neighbourhoodEvaluation);
 				}
 			}
-			if (currentBestRouteEvaluation < bestEvaluation) {
+			if (currentBestRouteEvaluation < bestcost) {
 				bestIterateNum = currentIterateNum;
-				copyGh(currentBestRoute, bestRoute);
-				bestEvaluation = currentBestRouteEvaluation;
+				bestRoute = Arrays.copyOf(currentBestRoute, currentBestRoute.length);
+				bestcost = currentBestRouteEvaluation;
 				System.out.println("���ԣ�currentBestRouteEvaluation=" + currentBestRouteEvaluation);
 			}
-			copyGh(currentBestRoute, route);
+			route = Arrays.copyOf(currentBestRoute, currentBestRoute.length);
 			// ����ɱ���currentBestRoute������ɱ�
 			// System.out.println("���Ե㣺currentBestRoute= "+currentBestRoute);
 			flushTabuTable(currentBestRoute);
@@ -357,7 +394,7 @@ public class TS {
 		System.out.println("��ѳ��ȳ��ִ�����");
 		System.out.println(bestIterateNum);
 		System.out.println("��ѳ���:");
-		System.out.println(bestEvaluation);
+		System.out.println(bestcost);
 		System.out.println("���·����");
 		for (int i = 0; i < nodeNum; i++) {
 			System.out.print(bestRoute[i] + ",");
@@ -368,14 +405,20 @@ public class TS {
 	 * @Description: ���������״̬
 	 */
 	private void printRunStatus() {
-		System.out.println("����·�����ȣ�" + bestEvaluation);
+		System.out.println("����·�����ȣ�" + bestcost);
 	}
 
 	public static void main(String[] args) throws IOException {
 		System.out.println("Start....");
 		List<String> listSearch = new ArrayList<String>();
 		TS tabu = new TS(48, 120, 500, 5);
-		tabu.init("resources/att48.tsp");
+		tabu.init("src\\main\\resources\\eil51.txt");
 		tabu.startSearch();
+	}
+
+	@Override
+	public TspPlan solve() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'solve'");
 	}
 }

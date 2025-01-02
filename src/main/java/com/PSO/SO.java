@@ -1,4 +1,4 @@
-package com.PSO;
+package com.pso;
 
 
 public class SO {

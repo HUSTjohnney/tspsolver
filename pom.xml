@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.example</groupId>
@@ -26,6 +25,13 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.8.0</version>
             <scope>test</scope>
+        </dependency>
+            <dependency>
+                    <groupId>or.cplex</groupId>  <!--自定义-->
+                    <artifactId>cplex-12.6.0.1</artifactId>    <!--自定义-->
+                    <version>12.6.0.1-SNAPSHOT</version> <!--自定义-->
+                    <scope>system</scope> <!--system，类似provided，需要显式提供依赖的jar以后，Maven就不会在Repository中查找它-->
+                    <systemPath>D:\git workspace\tspsolver\lib\cplex.jar</systemPath> <!--项目根目录下的lib文件夹下-->
         </dependency>
     </dependencies>
 </project>

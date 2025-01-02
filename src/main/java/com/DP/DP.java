@@ -1,4 +1,5 @@
-package com.DP;
+package com.dp;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -57,7 +58,7 @@ public class DP {
 		return (long) Math.sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
 	}
 
-	public long DP() {
+	public long DPsolver() {
 		if (distance == null) {
 			System.out.println("�������Ϊ��");
 		}
@@ -140,11 +141,13 @@ public class DP {
 				index = index + 1;
 			}
 			dist[n - 1][n - 1] = 1000;
+			data.close();
 		} catch (NumberFormatException | IOException e) {
 			System.out.println("�ļ������ڣ�����");
 			e.printStackTrace();
 		}
 		printArray(dist);
+
 		return dist;
 	}
 
@@ -163,8 +166,9 @@ public class DP {
 
 		System.out.println("Start....");
 		DP ts = new DP(23);
-		ts.init("resources/eil23.txt");
+		ts.init("src\\main\\resources\\eil51.txt");
 		// ts.distance = ts.inputDistance();
-		ts.DP();
+		ts.DPsolver();
+
 	}
 }

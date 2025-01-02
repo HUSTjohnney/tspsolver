@@ -1,13 +1,11 @@
-package com.SA;
+package com.sa;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
-import com.TspReader;
 import com.TspSolver;
 import com.TspPlan;
 import com.TspProblem;
@@ -134,13 +132,13 @@ public class SA implements TspSolver {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TspReader.read("src\\main\\resources\\eil51.txt", 51);
+		TspProblem problem = TspProblem.read("src\\main\\resources\\eil51.txt", 51);
 		SA sa = new SA(problem);
 		int[] rout = sa.getInitRoute();
 		SA.setT0(1e6);
 		SA.setD(0.99);
 		SA.setTk(1e-6);
-		SA.setL(20 * rout.length);
+		SA.setL(50 * rout.length);
 		TspPlan plan = sa.solve();
 		System.out.println(plan);
 	}

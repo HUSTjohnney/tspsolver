@@ -1,4 +1,4 @@
-package com.Greedy;
+package com.greedy;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -174,7 +174,7 @@ public class Greedy {
 	public static void main(String[] args) throws IOException {
 		System.out.println("Start....");
 		Greedy ts = new Greedy(51);
-		ts.init("resources/eil51.txt");
+		ts.init("src\\main\\resources\\eil51.txt");
 		// ts.printinit();
 		ts.solve();
 	}

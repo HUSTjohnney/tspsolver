@@ -1,4 +1,4 @@
-package com.GA;
+package com.ga;
 
 import java.io.BufferedReader;
 
@@ -603,7 +603,7 @@ public class GA {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		GA ga = new GA(100, 51, 100, 0.95, 0.75, "resources/eil51.txt");
+		GA ga = new GA(100, 51, 100, 0.95, 0.75, "src\\main\\resources\\eil51.txt");
 		ga.solve();
 	}
 
