@@ -1,13 +1,12 @@
 package com.aco;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
+import com.TspPlan;
 import com.TspProblem;
+import com.TspSolver;
 
-public class ACO {
+public class ACO implements TspSolver {
 
 	private Ant[] ants; // 蚂蚁
 	private int antNum; // 蚂蚁数量
@@ -54,8 +53,6 @@ public class ACO {
 		rho = r;
 	}
 
-	// 给编译器一条指令，告诉它对被批注的代码元素内部的某些警告保持静默
-	@SuppressWarnings("resource")
 	/**
 	 * 初始化ACO算法类
 	 * 
@@ -83,7 +80,8 @@ public class ACO {
 		}
 	}
 
-	public void solve() {
+	public TspPlan solve() {
+		long startTime = System.currentTimeMillis();
 		// 迭代MAX_GEN次
 		for (int g = 0; g < MAX_GEN; g++) {
 			// antNum只蚂蚁
@@ -121,8 +119,8 @@ public class ACO {
 			}
 		}
 
-		// 打印最佳结果
-		printOptimal();
+		long endTime = System.currentTimeMillis();
+		return new TspPlan(bestTour, bestLength, (endTime - startTime) / 1000);
 	}
 
 	// 更新信息素
@@ -142,23 +140,15 @@ public class ACO {
 		}
 	}
 
-	private void printOptimal() {
-		System.out.println("The optimal length is: " + bestLength);
-		System.out.println("The optimal tour is: ");
-		for (int i = 0; i < cityNum + 1; i++) {
-			System.out.print(bestTour[i] + "->");
-		}
-	}
-
 	/**
 	 * @param args
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		System.out.println("Start....");
 		ACO aco = new ACO(48, 10, 100, 1.f, 5.f, 0.5f);
 		aco.init("src\\main\\resources\\eil51.txt");
-		aco.solve();
+		TspPlan plan = aco.solve();
+		System.out.println("The plan is: " + plan);
 	}
 
 }
