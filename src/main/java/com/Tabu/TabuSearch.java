@@ -6,9 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import com.TspPlan;
 import com.TspProblem;
+import com.TspSolver;
 
-public class TabuSearch {
+public class TabuSearch implements TspSolver {
 
     // 计算 TSP 的路径长度
     public static int calculateDistance(int[][] dist, int[] solution) {
@@ -122,12 +124,19 @@ public class TabuSearch {
         return -1;
     }
 
+    @Override
+    public TspPlan solve() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'solve'");
+    }
+
     public static void main(String[] args) throws IOException {
         TspProblem tspProblem = new TspProblem(TspProblem.read("src\\main\\resources\\eil51.txt", 51));
-        int tabuSize = 1000;
+        int tabuSize = 3000;
         int maxIterations = 1000;
         int[] bestSolution = tabuSearch(tspProblem, tabuSize, maxIterations);
         System.out.println("Best solution: " + Arrays.toString(bestSolution));
         System.out.println("Best distance: " + calculateDistance(tspProblem.getDist(), bestSolution));
     }
+
 }

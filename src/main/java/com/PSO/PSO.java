@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
+import com.TspProblem;
+
 public class PSO {
 
 	private int bestNum;
@@ -66,49 +68,8 @@ public class PSO {
 	 */
 	private void init(String filename) throws IOException {
 		// read the data
-		int[] x;
-		int[] y;
-		String strbuff;
-		BufferedReader data = new BufferedReader(new InputStreamReader(
-				new FileInputStream(filename)));
-		distance = new int[cityNum][cityNum];
-		x = new int[cityNum];
-		y = new int[cityNum];
-		while ((strbuff = data.readLine()) != null) {
-			if (!Character.isAlphabetic(strbuff.charAt(0)))
-				break;
-		}
-		String[] tmp = strbuff.split(" ");
-		x[0] = Integer.valueOf(tmp[1]);// x����
-		y[0] = Integer.valueOf(tmp[2]);// y����
-		for (int i = 1; i < cityNum; i++) {
-			// read data one row��data format 1 6734 1453
-			strbuff = data.readLine();
-			// character segmentation
-			String[] strcol = strbuff.split(" ");
-			x[i] = Integer.valueOf(strcol[1]);// x coordinates
-			y[i] = Integer.valueOf(strcol[2]);// y coordinates
-		}
-		// calculate the distance matrix
-		// ����Ծ������⣬������㷽��Ҳ��һ�����˴��õ���att48��Ϊ����������48�����У�������㷽��Ϊαŷ�Ͼ��룬����ֵΪ10628
-		for (int i = 0; i < cityNum - 1; i++) {
-			distance[i][i] = 0; // the diagonal line is 0
-			for (int j = i + 1; j < cityNum; j++) {
-				double rij = Math
-						.sqrt(((x[i] - x[j]) * (x[i] - x[j]) + (y[i] - y[j])
-								* (y[i] - y[j])) / 10.0);
-				// rounding
-				int tij = (int) Math.round(rij);
-				if (tij < rij) {
-					distance[i][j] = tij + 1;
-					distance[j][i] = distance[i][j];
-				} else {
-					distance[i][j] = tij;
-					distance[j][i] = distance[i][j];
-				}
-			}
-		}
-		distance[cityNum - 1][cityNum - 1] = 0;
+		TspProblem problem = TspProblem.read(filename, cityNum);
+		this.distance = problem.getDist();
 
 		oPopulation = new int[scale][cityNum];
 		fitness = new int[scale];
