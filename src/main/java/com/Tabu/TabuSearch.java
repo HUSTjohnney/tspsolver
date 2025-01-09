@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import com.TSPUtils;
 import com.TspPlan;
 import com.TspProblem;
 import com.TspSolver;
@@ -131,7 +132,7 @@ public class TabuSearch implements TspSolver {
     }
 
     public static void main(String[] args) throws IOException {
-        TspProblem tspProblem = new TspProblem(TspProblem.read("src\\main\\resources\\eil51.txt", 51));
+        TspProblem tspProblem = new TspProblem(TSPUtils.read("src\\main\\resources\\eil51.txt", 51));
         int tabuSize = 3000;
         int maxIterations = 1000;
         int[] bestSolution = tabuSearch(tspProblem, tabuSize, maxIterations);

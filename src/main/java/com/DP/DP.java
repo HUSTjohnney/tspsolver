@@ -166,7 +166,7 @@ public class DP {
 
 		System.out.println("Start....");
 		DP ts = new DP(23);
-		ts.init("src\\main\\resources\\eil51.txt");
+		ts.init("src\\main\\resources\\25Nodes\\p01.txt");
 		// ts.distance = ts.inputDistance();
 		ts.DPsolver();
 

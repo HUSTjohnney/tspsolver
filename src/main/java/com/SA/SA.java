@@ -104,7 +104,7 @@ public class SA implements TspSolver {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TspProblem.read("src\\main\\resources\\eil51.txt", 51);
+		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
 		SA sa = new SA(problem);
 		int[] rout = sa.getInitRoute();
 		SA.setInitialTemporature(1e6);

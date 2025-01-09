@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.Cplex.CplexSolver;
+import com.aco.ACO;
 import com.ga.GA;
 import com.greedy.Greedy;
 import com.sa.SA;
@@ -20,7 +21,8 @@ public class TSPsolveInstance {
         // 选择算法
         // String algorithm = "CPLEX";
         // String algorithm = "SA";
-        String algorithm = "GA";
+        // String algorithm = "GA";
+        String algorithm = "ACO";
 
         String filePath = "src\\main\\resources\\" + nodeNum + "Nodes\\";
         // 创建 FileWriter 对象，用于写入结果到文件
@@ -43,7 +45,7 @@ public class TSPsolveInstance {
 
         for (int i = 1; i <= 20; i++) {
             String fileName = "p" + (i < 10 ? ("0" + i) : i) + ".txt"; // 待读取的 STND 文件名称
-            TspProblem tsp = TspProblem.read(filePath + fileName, nodeNum); // 解析 STND
+            TspProblem tsp = TSPUtils.read(filePath + fileName, nodeNum); // 解析 STND
             System.out.println("Solving " + fileName + "...");
 
             TspPlan plan = null;
@@ -66,6 +68,11 @@ public class TSPsolveInstance {
                 GA.setElite_RATE(0.15); // 精英保留率
                 GA.setMAX_GEN(1000); // 最大迭代次数
                 plan = new GA(tsp).solve();
+            } else if (algorithm.equals("ACO")) {
+                ACO.setAlpha(1.f);
+                ACO.setBeta(5.f);
+                ACO.setRho(0.5f);
+                plan = new ACO(tsp, (int) (tsp.getCityNum() * 2 / 3), 100).solve();
             } else {
                 System.out.println("Invalid algorithm name!");
             }

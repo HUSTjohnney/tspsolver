@@ -264,7 +264,7 @@ public class GA implements TspSolver {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TspProblem.read("src/main/resources/25Nodes/p01.txt", 25);
+		TspProblem problem = TSPUtils.read("src/main/resources/25Nodes/p01.txt", 25);
 		TspPlan p = new GA(problem).solve();
 		System.out.println("GA: " + p);
 

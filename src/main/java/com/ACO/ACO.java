@@ -2,11 +2,14 @@ package com.aco;
 
 import java.io.IOException;
 
+import com.TSPUtils;
 import com.TspPlan;
 import com.TspProblem;
 import com.TspSolver;
 
 public class ACO implements TspSolver {
+
+	private final TspProblem problem;
 
 	private Ant[] ants; // 蚂蚁
 	private int antNum; // 蚂蚁数量
@@ -17,51 +20,32 @@ public class ACO implements TspSolver {
 	private int bestLength; // 最佳长度
 	private int[] bestTour; // 最佳路径
 
-	// 三个参数
-	private float alpha;
-	private float beta;
-	private float rho;
-
-	public ACO() {
-
-	}
+	private static float alpha; // 信息启发因子
+	private static float beta; // 期望启发因子
+	private static float rho; // 信息素挥发因子
 
 	/**
-	 * constructor of ACO
+	 * ACO算法的构造函数
 	 * 
-	 * @param n
-	 *          城市数量
-	 * @param m
-	 *          蚂蚁数量
-	 * @param g
-	 *          运行代数
-	 * @param a
-	 *          alpha
-	 * @param b
-	 *          beta
-	 * @param r
-	 *          rho
-	 * 
-	 **/
-	public ACO(int n, int m, int g, float a, float b, float r) {
-		cityNum = n;
-		antNum = m;
-		ants = new Ant[antNum];
-		MAX_GEN = g;
-		alpha = a;
-		beta = b;
-		rho = r;
+	 * @param problem TSP问题
+	 * @param antNum  蚂蚁数量
+	 * @param max_gen 最大迭代次数
+	 */
+	public ACO(TspProblem problem, int antNum, int max_gen) {
+		this.problem = problem;
+		this.cityNum = problem.getCityNum();
+		this.antNum = antNum;
+		this.ants = new Ant[antNum];
+		this.MAX_GEN = max_gen;
+		init();
 	}
 
 	/**
 	 * 初始化ACO算法类
 	 * 
-	 * @param filename 数据文件名，该文件存储所有城市节点坐标数据
-	 * @throws IOException
 	 */
-	private void init(String filename) throws IOException {
+	private void init() {
 		// 读取数据
-		TspProblem problem = TspProblem.read(filename, cityNum);
 		distance = problem.getDist();
 
 		// 初始化信息素矩阵
@@ -86,7 +70,7 @@ public class ACO implements TspSolver {
 		for (int g = 0; g < MAX_GEN; g++) {
 			// antNum只蚂蚁
 			for (int i = 0; i < antNum; i++) {
-				// i这只蚂蚁走cityNum步，完整一个TSP
+				// 这只蚂蚁走cityNum步，完整一个TSP
 				for (int j = 1; j < cityNum; j++) {
 					ants[i].selectNextCity(pheromone);
 				}
@@ -120,7 +104,7 @@ public class ACO implements TspSolver {
 		}
 
 		long endTime = System.currentTimeMillis();
-		return new TspPlan(bestTour, bestLength, (endTime - startTime) / 1000);
+		return new TspPlan(bestTour, bestLength, (endTime - startTime) / 1000.0);
 	}
 
 	// 更新信息素
@@ -145,10 +129,38 @@ public class ACO implements TspSolver {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		ACO aco = new ACO(48, 10, 100, 1.f, 5.f, 0.5f);
-		aco.init("src\\main\\resources\\eil51.txt");
+		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
+		ACO aco = new ACO(problem, 10, 100);
+		ACO.setAlpha(1.f);
+		ACO.setBeta(5.f);
+		ACO.setRho(0.5f);
 		TspPlan plan = aco.solve();
 		System.out.println("The plan is: " + plan);
+	}
+
+	// getter and setter
+	public static float getAlpha() {
+		return alpha;
+	}
+
+	public static void setAlpha(float alpha) {
+		ACO.alpha = alpha;
+	}
+
+	public static float getBeta() {
+		return beta;
+	}
+
+	public static void setBeta(float beta) {
+		ACO.beta = beta;
+	}
+
+	public static float getRho() {
+		return rho;
+	}
+
+	public static void setRho(float rho) {
+		ACO.rho = rho;
 	}
 
 }

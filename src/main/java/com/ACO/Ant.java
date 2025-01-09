@@ -36,12 +36,9 @@ public class Ant implements Cloneable {
     /**
      * 初始化蚂蚁，随机选择起始位置
      * 
-     * @param distance
-     *                 距离矩阵
-     * @param a
-     *                 alpha
-     * @param b
-     *                 beta
+     * @param distance 距离矩阵
+     * @param a        alpha
+     * @param b        beta
      */
 
     public void init(int[][] distance, float a, float b) {

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.TSPUtils;
 import com.TspPlan;
 import com.TspProblem;
 import com.TspSolver;
@@ -35,7 +36,7 @@ public class CplexSolver implements TspSolver {
 
     public static void main(String[] args) throws IOException {
 
-        TspProblem problem = TspProblem.read("src\\main\\resources\\eil51.txt", 51);
+        TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
         TspPlan p = new CplexSolver(problem).solve();
         System.out.println("Cplex: " + p);
 

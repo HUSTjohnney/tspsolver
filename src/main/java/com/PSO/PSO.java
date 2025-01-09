@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
+import com.TSPUtils;
 import com.TspProblem;
 
 public class PSO {
@@ -68,7 +69,7 @@ public class PSO {
 	 */
 	private void init(String filename) throws IOException {
 		// read the data
-		TspProblem problem = TspProblem.read(filename, cityNum);
+		TspProblem problem = TSPUtils.read(filename, cityNum);
 		this.distance = problem.getDist();
 
 		oPopulation = new int[scale][cityNum];
