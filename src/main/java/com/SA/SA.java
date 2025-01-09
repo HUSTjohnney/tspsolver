@@ -13,12 +13,17 @@ import com.TspProblem;
 public class SA implements TspSolver {
 
 	private TspProblem problem;
-	
-	private static double T0 = 1e6; // 初始温度
-	private static double d = 0.99; // 降温系数
-	private static double Tk = 1e-6; // 最低温度
-	private static int L = 1000; // 每个温度下的迭代次数
 
+	private static double initialTemporature = 1e6; // 初始温度
+	private static double decresRate = 0.99; // 降温系数
+	private static double temperatureLB = 1e-6; // 最低温度
+	private static int iterTimes = 1000; // 每个温度下的迭代次数
+
+	/**
+	 * 构造函数
+	 * 
+	 * @param problem TSP问题
+	 */
 	public SA(TspProblem problem) {
 		this.problem = problem;
 	}
@@ -103,16 +108,16 @@ public class SA implements TspSolver {
 		long startTime = System.currentTimeMillis();
 		int[] initRout = getInitRoute();
 		int[] bestpath, curentpath;
-		double t = T0;
+		double t = initialTemporature;
 		bestpath = curentpath = Arrays.copyOf(initRout, initRout.length);
 		Random random = new Random();
-		//
-		while (t > Tk) {
+
+		while (t > temperatureLB) {
 			int it = 0;
-			while (it < L) {
+			while (it < iterTimes) {
 				int[] update_path = swap(curentpath);
 				int delta = cost(update_path) - cost(curentpath);
-				if (delta < 0) {
+				if (delta < 0) { // 如果新路径更短，以一定概率接受新路径
 					curentpath = update_path;
 					bestpath = update_path;
 				} else {
@@ -124,7 +129,7 @@ public class SA implements TspSolver {
 				it++;
 			}
 			// 降温
-			t *= d;
+			t *= decresRate;
 		}
 
 		long endTime = System.currentTimeMillis();
@@ -136,12 +141,13 @@ public class SA implements TspSolver {
 		TspProblem problem = TspProblem.read("src\\main\\resources\\eil51.txt", 51);
 		SA sa = new SA(problem);
 		int[] rout = sa.getInitRoute();
-		SA.setT0(1e6);
-		SA.setD(0.99);
-		SA.setTk(1e-6);
-		SA.setL(50 * rout.length);
+		SA.setInitialTemporature(1e6);
+		SA.setDecresRate(0.99);
+		SA.setTemperatureLB(1e-6);
+		SA.setIterTimes(100 * rout.length);
 		TspPlan plan = sa.solve();
 		System.out.println(plan);
+		System.out.println(plan.getRoute().length);
 	}
 
 	// getter and setter
@@ -153,36 +159,36 @@ public class SA implements TspSolver {
 		this.problem = problem;
 	}
 
-	public static double getT0() {
-		return T0;
+	public static double getInitialTemporature() {
+		return initialTemporature;
 	}
 
-	public static void setT0(double t0) {
-		T0 = t0;
+	public static void setInitialTemporature(double t0) {
+		initialTemporature = t0;
 	}
 
-	public static double getD() {
-		return d;
+	public static double getDecresRate() {
+		return decresRate;
 	}
 
-	public static void setD(double d) {
-		SA.d = d;
+	public static void setDecresRate(double d) {
+		SA.decresRate = d;
 	}
 
-	public static double getTk() {
-		return Tk;
+	public static double getTemperatureLB() {
+		return temperatureLB;
 	}
 
-	public static void setTk(double tk) {
-		Tk = tk;
+	public static void setTemperatureLB(double tk) {
+		temperatureLB = tk;
 	}
 
-	public static int getL() {
-		return L;
+	public static int getIterTimes() {
+		return iterTimes;
 	}
 
-	public static void setL(int l) {
-		L = l;
+	public static void setIterTimes(int l) {
+		iterTimes = l;
 	}
 
 }

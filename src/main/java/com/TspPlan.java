@@ -1,5 +1,8 @@
 package com;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.Arrays;
 
 public class TspPlan {
@@ -47,6 +50,13 @@ public class TspPlan {
         }
         sb.append("->0");
         return sb.toString();
+    }
+
+    public double getMemoryUsage() {
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapMemoryUsage = memoryBean.getHeapMemoryUsage();
+        long usedMemory = heapMemoryUsage.getUsed();
+        return usedMemory / (1024.0 * 1024.0); // 将字节转换为 MB
     }
 
 }

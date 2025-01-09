@@ -14,23 +14,22 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
 public class CplexSolver implements TspSolver {
+
+    private TspProblem problem;
+
     // 城市坐标<[x,y]>
-    List<double[]> locationList;
-    // 距离矩阵
-    double[][] distance;
-    // 城市数量
-    int cityNum;
-    // 开始地点索引
-    int startIndex;
+    private List<int[]> locationList;
 
-    public CplexSolver(List<double[]> locationList) {
-        this.locationList = locationList;
-    }
-
+    /**
+     * 构造函数，初始化城市坐标
+     * 
+     * @param problem TSP问题
+     */
     public CplexSolver(TspProblem problem) {
+        this.problem = problem;
         this.locationList = new ArrayList<>();
         for (int i = 0; i < problem.getxCoors().length; i++) {
-            locationList.add(new double[] { problem.getxCoors()[i], problem.getyCoors()[i] });
+            locationList.add(new int[] { problem.getxCoors()[i], problem.getyCoors()[i] });
         }
     }
 
@@ -43,15 +42,20 @@ public class CplexSolver implements TspSolver {
     }
 
     public TspPlan solve() {
-        initVar();
-        return this.solver();
-    }
-
-    private TspPlan solver() {
+        int cityNum = locationList.size();
+        int[][] distance = problem.getDist();
+        long startTime = System.currentTimeMillis();
         List<Integer> bestPath = new ArrayList<>();
         try {
             IloCplex cplex = new IloCplex();
-            // 决策变量
+
+            // 设置求解参数
+            cplex.setParam(IloCplex.DoubleParam.TiLim, 3600); // 设置求解时间限制为 3600 秒，可以根据实际情况调整
+            // cplex.setParam(IloCplex.IntParam.RootAlg, IloCplex.Algorithm.Barrier); //
+            // 尝试使用不同的根求解算法，这里使用 Barrier 算法
+            cplex.setParam(IloCplex.DoubleParam.EpGap, 0.0001); // 设置相对 MIP 间隙为 0，尽量找到最优解
+
+            // 创建决策变量
             IloIntVar[][] intVars = new IloIntVar[cityNum][cityNum];
             for (int i = 0; i < cityNum; i++) {
                 for (int j = 0; j < cityNum; j++) {
@@ -60,6 +64,7 @@ public class CplexSolver implements TspSolver {
                     }
                 }
             }
+
             // 目标函数
             IloLinearNumExpr target = cplex.linearNumExpr();
             for (int i = 0; i < cityNum; i++) {
@@ -102,8 +107,8 @@ public class CplexSolver implements TspSolver {
             cplex.setOut(null);
             // 求解
             if (cplex.solve()) {
-                bestPath.add(startIndex);
-                int index = startIndex;
+                bestPath.add(0);
+                int index = 0;
                 while (true) {
                     for (int i = 0; i < intVars[index].length; i++) {
                         if (index != i && cplex.getValue(intVars[index][i]) > 1e-06) {
@@ -112,16 +117,17 @@ public class CplexSolver implements TspSolver {
                             break;
                         }
                     }
-                    if (index == startIndex) {
+                    if (index == 0) {
                         break;
                     }
                 }
                 // System.out.println("最短路径为：" + bestPath);
                 // System.out.println("最短路径长度为：" + cplex.getObjValue());
 
+                long endTime = System.currentTimeMillis();
+
                 return new TspPlan(bestPath.stream().mapToInt(Integer::intValue).toArray(),
-                        (int) cplex.getObjValue(),
-                        cplex.getCplexTime());
+                        (int) cplex.getBestObjValue(), (endTime - startTime) / 1000.0);
             } else {
                 // System.err.println("此题无解");
                 return new TspPlan(new int[] { 0 }, -1, cplex.getCplexTime());
@@ -131,37 +137,6 @@ public class CplexSolver implements TspSolver {
         }
         return null;
 
-    }
-
-    // 初始化变量
-    public void initVar() {
-        // 开始地点索引
-        startIndex = 0;
-        // 城市数量为点的数量
-        cityNum = locationList.size();
-        // 距离矩阵
-        distance = new double[cityNum][cityNum];
-        // 初始化距离矩阵
-        for (int i = 0; i < distance.length; i++) {
-            for (int j = i; j < distance[i].length; j++) {
-                if (i == j) {
-                    // 对角线为无穷大
-                    distance[i][j] = Double.MAX_VALUE;
-                } else {
-                    // 计算i到j的距离
-                    distance[i][j] = getDistance(locationList.get(i), locationList.get(j));
-                    distance[j][i] = distance[i][j];
-                }
-            }
-        }
-    }
-
-    // 计算两点之间的距离（使用伪欧氏距离，可以减少计算量）
-    public double getDistance(double[] place1, double[] place2) {
-        // 伪欧氏距离在根号内除以了一个10
-        // return Math.sqrt((Math.pow(place1[0] - place2[0], 2) + Math.pow(place1[1] -
-        // place2[1], 2)) / 10.0);
-        return Math.sqrt((Math.pow(place1[0] - place2[0], 2) + Math.pow(place1[1] - place2[1], 2)));
     }
 
 }

@@ -29,7 +29,7 @@ public class TSPGenerator {
         // 随机生成20个算例
         for (int i = 1; i <= 20; i++) {
             String fileName = "p" + String.format("%02d", i);
-            generateTSPInstance(50, "src\\main\\resources\\52nodes\\" + fileName + ".txt");
+            generateTSPInstance(25, "src\\main\\resources\\25nodes\\" + fileName + ".txt");
         }
     }
 }
