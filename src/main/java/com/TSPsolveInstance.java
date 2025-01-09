@@ -18,8 +18,9 @@ public class TSPsolveInstance {
         int nodeNum = 50;
 
         // 选择算法
-        String algorithm = "CPLEX";
+        // String algorithm = "CPLEX";
         // String algorithm = "SA";
+        String algorithm = "GA";
 
         String filePath = "src\\main\\resources\\" + nodeNum + "Nodes\\";
         // 创建 FileWriter 对象，用于写入结果到文件
@@ -50,7 +51,7 @@ public class TSPsolveInstance {
             if (algorithm.equals("CPLEX")) {
                 plan = new CplexSolver(tsp).solve();
             } else if (algorithm.equals("SA")) {
-                SA.setInitialTemporature(1e6);
+                SA.setInitialTemporature(1e5 * nodeNum);
                 SA.setDecresRate(0.99);
                 SA.setTemperatureLB(1e-6);
                 SA.setIterTimes(50 * nodeNum);
@@ -59,8 +60,12 @@ public class TSPsolveInstance {
                 // plan = new Greedy(tsp).solve();
                 // TODO: 实现 Greedy 算法
             } else if (algorithm.equals("GA")) {
-                // plan = new GA(tsp).solve();
-                // TODO: 实现 GA 算法
+                GA.setChoromosome_Num(nodeNum * 10); // 种群数量
+                GA.setCROSS_RATE(0.85); // 交叉率
+                GA.setMUTATE_RATE(0.15); // 变异率
+                GA.setElite_RATE(0.15); // 精英保留率
+                GA.setMAX_GEN(1000); // 最大迭代次数
+                plan = new GA(tsp).solve();
             } else {
                 System.out.println("Invalid algorithm name!");
             }

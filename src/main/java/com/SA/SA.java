@@ -7,6 +7,7 @@ import java.util.Queue;
 import java.util.Random;
 
 import com.TspSolver;
+import com.TSPUtils;
 import com.TspPlan;
 import com.TspProblem;
 
@@ -35,8 +36,8 @@ public class SA implements TspSolver {
 	 */
 	public int[] getInitRoute() {
 
-		int[] vis = new int[problem.getxCoors().length];
-		int[] ret = new int[problem.getxCoors().length];
+		int[] vis = new int[problem.getCityNum()];
+		int[] ret = new int[problem.getCityNum()];
 		Queue<Integer> q = new LinkedList<>();
 		q.add(0);
 		vis[0] = 1;
@@ -45,7 +46,7 @@ public class SA implements TspSolver {
 			int front = q.poll();
 			int min = Integer.MAX_VALUE;
 			int sIdx = 0;
-			for (int i = 0; i < problem.getxCoors().length; i++) {
+			for (int i = 0; i < problem.getCityNum(); i++) {
 				if (vis[i] == 0 && i != front && min > problem.getDist()[front][i]) {
 					min = problem.getDist()[front][i];
 					sIdx = i;
@@ -60,42 +61,6 @@ public class SA implements TspSolver {
 		}
 		q = null;
 		return ret;
-	}
-
-	/**
-	 * 计算路径长度
-	 * 
-	 * @param rout 路径
-	 * @return 路径长度
-	 */
-	public int cost(int[] rout) {
-		int sum = 0;
-		int[][] dist = problem.getDist();
-		for (int i = 0; i < rout.length - 1; i++) {
-			sum += dist[rout[i]][rout[i + 1]];
-		}
-		sum += dist[rout[rout.length - 1]][rout[0]];
-		return sum;
-	}
-
-	/**
-	 * 交换两个城市的位置
-	 * 
-	 * @param rout 初始路径
-	 * @return 交换后的路径
-	 */
-	public int[] swap(int[] rout) {
-		Random random = new Random();
-		int r1 = random.nextInt(rout.length);
-		int r2 = random.nextInt(rout.length);
-		while (r1 == r2) {
-			r2 = random.nextInt(rout.length);
-		}
-		int[] change = Arrays.copyOf(rout, rout.length);
-		int tmp = change[r1];
-		change[r1] = change[r2];
-		change[r2] = tmp;
-		return change;
 	}
 
 	/**
@@ -115,8 +80,9 @@ public class SA implements TspSolver {
 		while (t > temperatureLB) {
 			int it = 0;
 			while (it < iterTimes) {
-				int[] update_path = swap(curentpath);
-				int delta = cost(update_path) - cost(curentpath);
+				int[] update_path = TSPUtils.swap(curentpath);
+				int delta = TSPUtils.cost(update_path, problem.getDist())
+						- TSPUtils.cost(curentpath, problem.getDist());
 				if (delta < 0) { // 如果新路径更短，以一定概率接受新路径
 					curentpath = update_path;
 					bestpath = update_path;
@@ -134,7 +100,7 @@ public class SA implements TspSolver {
 
 		long endTime = System.currentTimeMillis();
 		double duration = (endTime - startTime) / 1000.0;
-		return new TspPlan(bestpath, cost(bestpath), duration);
+		return new TspPlan(bestpath, TSPUtils.cost(bestpath, problem.getDist()), duration);
 	}
 
 	public static void main(String[] args) throws IOException {

@@ -4,15 +4,12 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 
 public class TspProblem {
 	private final int[] xCoors; // 城市的x坐标
 	private final int[] yCoors; // 城市的y坐标
-	private final int[][] dist; // 两个城市之间的距离
+	private final int[][] dist; // 两个城市之间的距离\
+	private final int cityNum; // 城市数量
 
 	/**
 	 * 构造函数，初始化城市坐标和城市之间的距离
@@ -25,6 +22,7 @@ public class TspProblem {
 		this.xCoors = xCoors;
 		this.yCoors = yCoors;
 		this.dist = calculateDists();
+		this.cityNum = xCoors.length;
 	}
 
 	/**
@@ -36,6 +34,7 @@ public class TspProblem {
 		this.xCoors = problem.getxCoors();
 		this.yCoors = problem.getyCoors();
 		this.dist = problem.getDist();
+		this.cityNum = problem.getCityNum();
 	}
 
 	/**
@@ -68,13 +67,19 @@ public class TspProblem {
 		return (int) Math.sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
 	}
 
-	// 计算 TSP 的路径长度
-	public static int calculateDistance(int[][] dist, int[] solution) {
+	/**
+	 * 计算两个城市之间的目标函数距离
+	 * 
+	 * @param dist  距离矩阵
+	 * @param route 可行路径
+	 * @return 路径长度
+	 */
+	public int calculateDistance(int[] route) {
 		int distance = 0;
-		for (int i = 0; i < solution.length - 1; i++) {
-			distance += dist[solution[i]][solution[i + 1]];
+		for (int i = 0; i < route.length - 1; i++) {
+			distance += dist[route[i]][route[i + 1]];
 		}
-		distance += dist[solution[solution.length - 1]][solution[0]]; // 回到起点
+		distance += dist[route[route.length - 1]][route[0]]; // 回到起点
 		return distance;
 	}
 
@@ -127,6 +132,10 @@ public class TspProblem {
 
 	public int[][] getDist() {
 		return dist;
+	}
+
+	public int getCityNum() {
+		return cityNum;
 	}
 
 }

@@ -1,610 +1,311 @@
 package com.ga;
 
-import java.io.BufferedReader;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.Arrays;
 
-public class GA {
+import com.TspProblem;
+import com.TspSolver;
+import com.TSPUtils;
+import com.TspPlan;
 
-	private Chromosome[] chromosomes;
-	private Chromosome[] nextGeneration;
-	private int N;
-	private int cityNum;
-	private double p_c_t;
-	private double p_m_t;
-	private int MAX_GEN;
-	private int bestLength;
-	private int[] bestTour;
-	private double bestFitness;
-	private double[] averageFitness;
-	private int[][] distance;
-	private String filename;
+public class GA implements TspSolver {
 
-	public GA() {
-		N = 100;
-		cityNum = 30;
-		p_c_t = 0.9;
-		p_m_t = 0.1;
-		MAX_GEN = 1000;
-		bestLength = 0;
-		bestTour = new int[cityNum];
-		bestFitness = 0.0;
-		averageFitness = new double[MAX_GEN];
-		chromosomes = new Chromosome[N];
-		distance = new int[cityNum][cityNum];
+	/**
+	 * TSP问题对象，记录城市数量、城市坐标、城市之间的距离
+	 */
+	private TspProblem problem;
+
+	/**
+	 * 染色体数组
+	 */
+	private int[][] chromosomes;
+
+	/**
+	 * 种群大小
+	 */
+	private static int choromosome_Num = 200;
+
+	/**
+	 * 交叉概率，即两个染色体进行交叉的概率
+	 */
+	private static double CROSS_RATE = 0.9;
+
+	/**
+	 * 变异概率，即染色体进行变异的概率
+	 */
+	private static double MUTATE_RATE = 0.1;
+
+	/**
+	 * 最大遗传代数
+	 */
+	private static int MAX_GEN = 500;
+
+	/**
+	 * 精英保留策略的比例
+	 */
+	private static double Elite_RATE = 0.2;
+
+	/**
+	 * 基于 TSP 问题构造 GA 类
+	 * 
+	 * @param problem TSP 问题
+	 */
+	public GA(TspProblem problem) {
+		this.problem = problem;
+		this.chromosomes = new int[choromosome_Num][problem.getCityNum()];
+
+		// 初始化种群
+		for (int i = 0; i < choromosome_Num; i++) {
+			chromosomes[i] = TSPUtils.findRandomRoute(problem.getCityNum());
+		}
+	}
+
+	/**
+	 * 选择操作，使用轮盘赌选择法，基本思想是按照染色体的适应度来分配选择的概率，适应度越高的染色体被选中的概率越大。
+	 * 
+	 */
+	private int[][] selection() {
+		int[][] selectedChromosomes = new int[choromosome_Num][problem.getCityNum()];
+		double[] fitness = new double[choromosome_Num];
+		double totalFitness = 0;
+
+		// 计算每个染色体的适应度、以及总适应度。
+		for (int i = 0; i < choromosome_Num; i++) {
+			// 适应度为路径长度的倒数
+			fitness[i] = 1.0 / TSPUtils.cost(chromosomes[i], problem.getDist());
+			totalFitness += fitness[i];
+		}
+
+		// 精英保留策略：先保留最优的几个染色体
+		int eliteSize = (int) (choromosome_Num * Elite_RATE);
+		double eliteFitnessSum = 0;
+		int[][] eliteChromosomes = getEliteChromosomes(eliteSize);
+		for (int i = 0; i < eliteSize; i++) {
+			selectedChromosomes[i] = eliteChromosomes[i];
+			eliteFitnessSum += fitness[i];
+		}
+
+		// 轮盘赌选择剩下的染色体
+		for (int i = eliteSize; i < choromosome_Num; i++) {
+			double rouletteValue = Math.random() * (totalFitness - eliteFitnessSum);
+			double cumulativeFitness = 0;
+			for (int j = 0; j < choromosome_Num; j++) {
+				cumulativeFitness += fitness[j];
+				if (cumulativeFitness >= rouletteValue) {
+					selectedChromosomes[i] = chromosomes[j];
+					break;
+				}
+			}
+		}
+
+		return selectedChromosomes;
+	}
+
+	private int[][] getEliteChromosomes(int eliteSize) {
+		int[][] eliteChromosomes = new int[eliteSize][problem.getCityNum()];
+		double[] eliteFitness = new double[eliteSize];
+		Arrays.fill(eliteFitness, Double.MAX_VALUE);
+		for (int i = 0; i < choromosome_Num; i++) {
+			double cost = TSPUtils.cost(chromosomes[i], problem.getDist());
+			for (int j = 0; j < eliteSize; j++) {
+				if (cost < eliteFitness[j]) {
+					for (int k = eliteSize - 1; k > j; k--) {
+						eliteFitness[k] = eliteFitness[k - 1];
+						eliteChromosomes[k] = eliteChromosomes[k - 1];
+					}
+					eliteFitness[j] = cost;
+					eliteChromosomes[j] = chromosomes[i];
+					break;
+				}
+			}
+		}
+		return eliteChromosomes;
+	}
+
+	/**
+	 * 交叉操作
+	 * 
+	 * @param selectedChromosomes 选择后的染色体数组
+	 */
+	private int[][] crossover(int[][] selectedChromosomes) {
+		int[][] offspring = new int[choromosome_Num][problem.getCityNum()];
+
+		for (int i = 0; i < choromosome_Num; i += 2) {
+			if (Math.random() < CROSS_RATE) {
+				int[][] children = crossover2Chromosome(selectedChromosomes[i], selectedChromosomes[i + 1]);
+				offspring[i] = children[0];
+				offspring[i + 1] = children[1];
+			} else {
+				offspring[i] = selectedChromosomes[i];
+				offspring[i + 1] = selectedChromosomes[i + 1];
+			}
+		}
+
+		return offspring;
+	}
+
+	/**
+	 * 两点交叉操作
+	 * 
+	 * @param parent1 父代染色体1
+	 * @param parent2 父代染色体2
+	 * @return 两个子代染色体
+	 */
+	public static int[][] crossover2Chromosome(int[] parent1, int[] parent2) {
+		int n = parent1.length;
+		int[] child1 = new int[n];
+		int[] child2 = new int[n];
+		Arrays.fill(child1, -1);
+		Arrays.fill(child2, -1);
+
+		// 随机选择交叉的起始位置和结束位置
+		int start = (int) (Math.random() * n);
+		int end = (int) (Math.random() * n);
+		if (start > end) {
+			int temp = start;
+			start = end;
+			end = temp;
+		}
+
+		// 直接复制父代染色体的交叉区域
+		for (int i = start; i <= end; i++) {
+			child1[i] = parent1[i];
+			child2[i] = parent2[i];
+		}
+
+		// 填充 child1 的剩余位置
+		int index = 0;
+		for (int i = 0; i < n; i++) {
+			if (index == start) {
+				index = end + 1;
+			}
+			if (child1[i] == -1) {
+				for (int gene : parent2) {
+					if (!contains(child1, gene)) {
+						child1[i] = gene;
+						break;
+					}
+				}
+			}
+		}
+
+		// 填充 child2 的剩余位置
+		index = 0;
+		for (int i = 0; i < n; i++) {
+			if (index == start) {
+				index = end + 1;
+			}
+			if (child2[i] == -1) {
+				for (int gene : parent1) {
+					if (!contains(child2, gene)) {
+						child2[i] = gene;
+						break;
+					}
+				}
+			}
+		}
+
+		return new int[][] { child1, child2 };
+	}
+
+	private static boolean contains(int[] array, int value) {
+		for (int element : array) {
+			if (element == value) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 变异操作
+	 * 
+	 * @param offspring 交叉后的子代染色体数组
+	 */
+	private void mutation(int[][] offspring) {
+		for (int i = 0; i < choromosome_Num; i++) {
+			if (Math.random() < MUTATE_RATE) {
+				offspring[i] = TSPUtils.swap(offspring[i]);
+			}
+		}
+	}
+
+	@Override
+	public TspPlan solve() {
+		long startTime = System.currentTimeMillis();
+		for (int gen = 0; gen < MAX_GEN; gen++) {
+			int[][] selectedChromosomes = selection();
+			chromosomes = selectedChromosomes;
+			// printPopulation(-2);
+			int[][] offspring = crossover(selectedChromosomes);
+			mutation(offspring);
+			chromosomes = offspring;
+			// printPopulation(gen);
+		}
+
+		/**
+		 * 找到当前种群中的最优染色体
+		 * 
+		 * @return 最优染色体及其成本的 TspPlan 对象
+		 */
+		int[] bestRoute = chromosomes[0];
+		int bestCost = TSPUtils.cost(bestRoute, problem.getDist());
+
+		for (int i = 1; i < choromosome_Num; i++) {
+			int cost = TSPUtils.cost(chromosomes[i], problem.getDist());
+			if (cost < bestCost) {
+				bestRoute = chromosomes[i];
+				bestCost = cost;
+			}
+		}
+		long endTime = System.currentTimeMillis();
+		double duration = (endTime - startTime) / 1000.0;
+		return new TspPlan(bestRoute, bestCost, duration);
+	}
+
+	public static void main(String[] args) throws IOException {
+		TspProblem problem = TspProblem.read("src/main/resources/25Nodes/p01.txt", 25);
+		TspPlan p = new GA(problem).solve();
+		System.out.println("GA: " + p);
 
 	}
 
 	/**
-	 * Constructor of GA class
-	 * 
-	 * @param n
-	 *            ��Ⱥ��ģ
-	 * @param num
-	 *            ���й�ģ
-	 * @param g
-	 *            ���д���
-	 * @param p_c
-	 *            ������
-	 * @param p_m
-	 *            ������
-	 * @param filename
-	 *            �����ļ���
+	 * 打印一代种群，及其路径成本
 	 */
-	public GA(int n, int num, int g, double p_c, double p_m, String filename) {
-		this.N = n;
-		this.cityNum = num;
-		this.MAX_GEN = g;
-		this.p_c_t = p_c;
-		this.p_m_t = p_m;
-		bestTour = new int[cityNum];
-		averageFitness = new double[MAX_GEN];
-		bestFitness = 0.0;
-		chromosomes = new Chromosome[N];
-		nextGeneration = new Chromosome[N];
-		distance = new int[cityNum][cityNum];
-		this.filename = filename;
-	}
-
-	public void solve() throws IOException {
-		System.out.println("---------------------Start initilization---------------------");
-		init();
-		System.out.println("---------------------End initilization---------------------");
-		System.out.println("---------------------Start evolution---------------------");
-		for (int i = 0; i < MAX_GEN; i++) {
-			System.out.println("-----------Start generation " + i + "----------");
-			evolve(i);
-			System.out.println("-----------End generation " + i + "----------");
-		}
-		System.out.println("---------------------End evolution---------------------");
-		printOptimal();
-		outputResults();
-
-	}
-
-	/**
-	 * ��ʼ��GA
-	 * 
-	 * @throws IOException
-	 */
-	@SuppressWarnings("resource")
-	private void init() throws IOException {
-		// ��ȡ�����ļ�
-		int[] x;
-		int[] y;
-		String strbuff;
-		BufferedReader data = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
-
-		distance = new int[cityNum][cityNum];
-		x = new int[cityNum];
-		y = new int[cityNum];
-		while ((strbuff = data.readLine())!=null) {
-			if (!Character.isAlphabetic(strbuff.charAt(0)))
-				break;
-		}
-		String[] tmp = strbuff.split(" ");
-		x[0] = Integer.valueOf(tmp[1]);// x����
-		y[0] = Integer.valueOf(tmp[2]);// y����
-		for (int i = 1; i < cityNum; i++) {
-			strbuff = data.readLine();
-			String[] strcol = strbuff.split(" ");
-			x[i] = Integer.valueOf(strcol[1]).intValue();
-			y[i] = Integer.valueOf(strcol[2]).intValue();
-		}
-		// ���������� ����Ծ������⣬������㷽��Ҳ��һ�����˴��õ���att48��Ϊ����������48�����У�������㷽��Ϊαŷ�Ͼ��룬����ֵΪ10628
-		for (int i = 0; i < cityNum - 1; i++) {
-			distance[i][i] = 0; // �Խ���Ϊ0
-			for (int j = i + 1; j < cityNum; j++) {
-				double rij = Math.sqrt((x[i] - x[j]) * (x[i] - x[j]) + (y[i] - y[j]) * (y[i] - y[j]));
-				int tij = (int) Math.round(rij);
-				// if (tij < rij) {
-				distance[i][j] = tij;
-				distance[j][i] = distance[i][j];
-				/*
-				 * }else { distance[i][j] = tij; distance[j][i] = distance[i][j]; }
-				 */
-			}
-		}
-		distance[cityNum - 1][cityNum - 1] = 0;
-
-		for (int i = 0; i < N; i++) {
-			Chromosome chromosome = new Chromosome(cityNum, distance);
-			chromosome.randomGeneration();
-			chromosomes[i] = chromosome;
-			chromosome.print();
-		}
-	}
-
-	private void evolve(int g) {
-		double[] selectionP = new double[N];// ѡ�����
-		double sum = 0.0;
-		double tmp = 0.0;
-
-		for (int i = 0; i < N; i++) {
-			sum += chromosomes[i].getFitness();
-			if (chromosomes[i].getFitness() > bestFitness) {
-				bestFitness = chromosomes[i].getFitness();
-				bestLength = (int) (1.0 / bestFitness);
-				for (int j = 0; j < cityNum; j++) {
-					bestTour[j] = chromosomes[i].getTour()[j];
-				}
-
-			}
-		}
-		averageFitness[g] = sum / N;
-
-		System.out.println("The average fitness in " + g + " generation is: " + averageFitness[g]
-				+ ", and the best fitness is: " + bestFitness);
-		for (int i = 0; i < N; i++) {
-			tmp += chromosomes[i].getFitness() / sum;
-			selectionP[i] = tmp;
-		}
-		Random random = new Random(System.currentTimeMillis());
-		for (int i = 0; i < N; i = i + 2) {
-
-			Chromosome[] children = new Chromosome[2];
-			// ���̶�ѡ������Ⱦɫ��
-			// System.out.println("---------start selection-----------");
-			// System.out.println();
-			for (int j = 0; j < 2; j++) {
-
-				int selectedCity = 0;
-				for (int k = 0; k < N - 1; k++) {
-					double p = random.nextDouble();
-					if (p > selectionP[k] && p <= selectionP[k + 1]) {
-						selectedCity = k;
-					}
-					if (k == 0 && random.nextDouble() <= selectionP[k]) {
-						selectedCity = 0;
-					}
-				}
-				try {
-					children[j] = (Chromosome) chromosomes[selectedCity].clone();
-
-					// children[j].print();
-					// System.out.println();
-				} catch (CloneNotSupportedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-
-			// �������(OX1)
-
-			// System.out.println("----------Start crossover----------");
-			// System.out.println();
-			// Random random = new Random(System.currentTimeMillis());
-			if (random.nextDouble() < p_c_t) {
-				// System.out.println("crossover");
-				// random = new Random(System.currentTimeMillis());
-				// ��������cut��
-				int cutPoint1 = -1;
-				int cutPoint2 = -1;
-				int r1 = random.nextInt(cityNum);
-				if (r1 > 0 && r1 < cityNum - 1) {
-					cutPoint1 = r1;
-					// random = new Random(System.currentTimeMillis());
-					int r2 = random.nextInt(cityNum - r1);
-					if (r2 == 0) {
-						cutPoint2 = r1 + 1;
-					} else if (r2 > 0) {
-						cutPoint2 = r1 + r2;
-					}
-
-				}
-				if (cutPoint1 > 0 && cutPoint2 > 0) {
-					// System.out.println("Cut point1 is: "+cutPoint1 +", and cut point2 is:
-					// "+cutPoint2);
-					int[] tour1 = new int[cityNum];
-					int[] tour2 = new int[cityNum];
-					if (cutPoint2 == cityNum - 1) {
-						for (int j = 0; j < cityNum; j++) {
-							tour1[j] = children[0].getTour()[j];
-							tour2[j] = children[1].getTour()[j];
-						}
-					} else {
-
-						// int n = 1;
-						for (int j = 0; j < cityNum; j++) {
-							if (j < cutPoint1) {
-								tour1[j] = children[0].getTour()[j];
-								tour2[j] = children[1].getTour()[j];
-							} else if (j >= cutPoint1 && j < cutPoint1 + cityNum - cutPoint2 - 1) {
-								tour1[j] = children[0].getTour()[j + cutPoint2 - cutPoint1 + 1];
-								tour2[j] = children[1].getTour()[j + cutPoint2 - cutPoint1 + 1];
-							} else {
-								tour1[j] = children[0].getTour()[j - cityNum + cutPoint2 + 1];
-								tour2[j] = children[1].getTour()[j - cityNum + cutPoint2 + 1];
-							}
-
-						}
-					}
-					/*
-					 * System.out.println("The two tours are: "); for (int j = 0; j < cityNum; j++)
-					 * { System.out.print(tour1[j] +"\t"); } System.out.println(); for (int j = 0; j
-					 * < cityNum; j++) { System.out.print(tour2[j] +"\t"); } System.out.println();
-					 */
-
-					for (int j = 0; j < cityNum; j++) {
-						if (j < cutPoint1 || j > cutPoint2) {
-
-							children[0].getTour()[j] = -1;
-							children[1].getTour()[j] = -1;
-						} else {
-							int tmp1 = children[0].getTour()[j];
-							children[0].getTour()[j] = children[1].getTour()[j];
-							children[1].getTour()[j] = tmp1;
-						}
-					}
-					/*
-					 * for (int j = 0; j < cityNum; j++) {
-					 * System.out.print(children[0].getTour()[j]+"\t"); } System.out.println(); for
-					 * (int j = 0; j < cityNum; j++) {
-					 * System.out.print(children[1].getTour()[j]+"\t"); } System.out.println();
-					 */
-					if (cutPoint2 == cityNum - 1) {
-						int position = 0;
-						for (int j = 0; j < cutPoint1; j++) {
-							for (int m = position; m < cityNum; m++) {
-								boolean flag = true;
-								for (int n = 0; n < cityNum; n++) {
-									if (tour1[m] == children[0].getTour()[n]) {
-										flag = false;
-										break;
-									}
-								}
-								if (flag) {
-
-									children[0].getTour()[j] = tour1[m];
-									position = m + 1;
-									break;
-								}
-							}
-						}
-						position = 0;
-						for (int j = 0; j < cutPoint1; j++) {
-							for (int m = position; m < cityNum; m++) {
-								boolean flag = true;
-								for (int n = 0; n < cityNum; n++) {
-									if (tour2[m] == children[1].getTour()[n]) {
-										flag = false;
-										break;
-									}
-								}
-								if (flag) {
-									children[1].getTour()[j] = tour2[m];
-									position = m + 1;
-									break;
-								}
-							}
-						}
-
-					} else {
-
-						int position = 0;
-						for (int j = cutPoint2 + 1; j < cityNum; j++) {
-							for (int m = position; m < cityNum; m++) {
-								boolean flag = true;
-								for (int n = 0; n < cityNum; n++) {
-									if (tour1[m] == children[0].getTour()[n]) {
-										flag = false;
-										break;
-									}
-								}
-								if (flag) {
-									children[0].getTour()[j] = tour1[m];
-									position = m + 1;
-									break;
-								}
-							}
-						}
-						for (int j = 0; j < cutPoint1; j++) {
-							for (int m = position; m < cityNum; m++) {
-								boolean flag = true;
-								for (int n = 0; n < cityNum; n++) {
-									if (tour1[m] == children[0].getTour()[n]) {
-										flag = false;
-										break;
-									}
-								}
-								if (flag) {
-									children[0].getTour()[j] = tour1[m];
-									position = m + 1;
-									break;
-								}
-							}
-						}
-
-						position = 0;
-						for (int j = cutPoint2 + 1; j < cityNum; j++) {
-							for (int m = position; m < cityNum; m++) {
-								boolean flag = true;
-								for (int n = 0; n < cityNum; n++) {
-									if (tour2[m] == children[1].getTour()[n]) {
-										flag = false;
-										break;
-									}
-								}
-								if (flag) {
-									children[1].getTour()[j] = tour2[m];
-									position = m + 1;
-									break;
-								}
-							}
-						}
-						for (int j = 0; j < cutPoint1; j++) {
-							for (int m = position; m < cityNum; m++) {
-								boolean flag = true;
-								for (int n = 0; n < cityNum; n++) {
-									if (tour2[m] == children[1].getTour()[n]) {
-										flag = false;
-										break;
-									}
-								}
-								if (flag) {
-									children[1].getTour()[j] = tour2[m];
-									position = m + 1;
-									break;
-								}
-							}
-						}
-					}
-
-				}
-			}
-			// children[0].print();
-			// children[1].print();
-
-			// �������(DM)
-
-			// System.out.println("---------Start mutation------");
-			// System.out.println();
-			// random = new Random(System.currentTimeMillis());
-			if (random.nextDouble() < p_m_t) {
-				// System.out.println("mutation");
-				for (int j = 0; j < 2; j++) {
-					// random = new Random(System.currentTimeMillis());
-					// ��������cut��
-					int cutPoint1 = -1;
-					int cutPoint2 = -1;
-					int r1 = random.nextInt(cityNum);
-					if (r1 > 0 && r1 < cityNum - 1) {
-						cutPoint1 = r1;
-						// random = new Random(System.currentTimeMillis());
-						int r2 = random.nextInt(cityNum - r1);
-						if (r2 == 0) {
-							cutPoint2 = r1 + 1;
-						} else if (r2 > 0) {
-							cutPoint2 = r1 + r2;
-						}
-
-					}
-
-					if (cutPoint1 > 0 && cutPoint2 > 0) {
-						List<Integer> tour = new ArrayList<Integer>();
-						// System.out.println("Cut point1 is "+cutPoint1+", and cut point2 is
-						// "+cutPoint2);
-						if (cutPoint2 == cityNum - 1) {
-							for (int k = 0; k < cutPoint1; k++) {
-								tour.add(Integer.valueOf(children[j].getTour()[k]));
-							}
-						} else {
-							for (int k = 0; k < cityNum; k++) {
-								if (k < cutPoint1 || k > cutPoint2) {
-									tour.add(Integer.valueOf(children[j].getTour()[k]));
-								}
-							}
-						}
-						// random = new Random(System.currentTimeMillis());
-						int position = random.nextInt(tour.size());
-
-						if (position == 0) {
-
-							for (int k = cutPoint2; k >= cutPoint1; k--) {
-								tour.add(0, Integer.valueOf(children[j].getTour()[k]));
-							}
-
-						} else if (position == tour.size() - 1) {
-
-							for (int k = cutPoint1; k <= cutPoint2; k++) {
-								tour.add(Integer.valueOf(children[j].getTour()[k]));
-							}
-
-						} else {
-
-							for (int k = cutPoint1; k <= cutPoint2; k++) {
-								tour.add(position, Integer.valueOf(children[j].getTour()[k]));
-							}
-
-						}
-
-						for (int k = 0; k < cityNum; k++) {
-							children[j].getTour()[k] = tour.get(k).intValue();
-
-						}
-						// System.out.println();
-					}
-
-				}
-			}
-
-			// children[0].print();
-			// children[1].print();
-
-			nextGeneration[i] = children[0];
-			nextGeneration[i + 1] = children[1];
-
+	public void printPopulation(int gen) {
+		System.out.println("_______________________________Generation:" + gen + "_______________________________");
+		int totoaCost = 0;
+		for (int i = 0; i < choromosome_Num; i++) {
+			int cost = TSPUtils.cost(chromosomes[i], problem.getDist());
+			totoaCost += cost;
+			System.out
+					.println(Arrays.toString(chromosomes[i]) + " " + cost);
 		}
 
-		for (int k = 0; k < N; k++) {
-			try {
-				chromosomes[k] = (Chromosome) nextGeneration[k].clone();
-
-			} catch (CloneNotSupportedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		/*
-		 * System.out.println("Next generation is:"); for (int k = 0; k < N; k++) {
-		 * chromosomes[k].print(); }
-		 */
+		System.out.println(
+				"___________________avgCost:" + totoaCost / choromosome_Num + "___________________________________");
 	}
 
-	private void printOptimal() {
-		System.out.println("The best fitness is: " + bestFitness);
-		System.out.println("The best tour length is: " + bestLength);
-		System.out.println("The best tour is: ");
-		
-		System.out.print(bestTour[0] );
-		for (int i = 1; i < cityNum; i++) {
-			System.out.print("->"+bestTour[i]);
-		}
-		System.out.println();
+	// gettes and setters
+	public static void setChoromosome_Num(int n) {
+		choromosome_Num = n;
 	}
 
-	private void outputResults() {
-		String filename = "result.txt";
-		/*
-		 * File file = new File(filename); if (!file.exists()) { try {
-		 * file.createNewFile(); } catch (IOException e) { // TODO Auto-generated catch
-		 * block e.printStackTrace(); } }
-		 */
-		try {
-			@SuppressWarnings("resource")
-			FileOutputStream outputStream = new FileOutputStream(filename);
-			for (int i = 0; i < averageFitness.length; i++) {
-				String line = String.valueOf(averageFitness[i]) + "\r\n";
-
-				outputStream.write(line.getBytes());
-
-			}
-
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+	public static void setCROSS_RATE(double p_c_t) {
+		GA.CROSS_RATE = p_c_t;
 	}
 
-	public Chromosome[] getChromosomes() {
-		return chromosomes;
+	public static void setMUTATE_RATE(double p_m_t) {
+		GA.MUTATE_RATE = p_m_t;
 	}
 
-	public void setChromosomes(Chromosome[] chromosomes) {
-		this.chromosomes = chromosomes;
-	}
-
-	public int getCityNum() {
-		return cityNum;
-	}
-
-	public void setCityNum(int cityNum) {
-		this.cityNum = cityNum;
-	}
-
-	public double getP_c_t() {
-		return p_c_t;
-	}
-
-	public void setP_c_t(double p_c_t) {
-		this.p_c_t = p_c_t;
-	}
-
-	public double getP_m_t() {
-		return p_m_t;
-	}
-
-	public void setP_m_t(double p_m_t) {
-		this.p_m_t = p_m_t;
-	}
-
-	public int getMAX_GEN() {
-		return MAX_GEN;
-	}
-
-	public void setMAX_GEN(int mAX_GEN) {
+	public static void setMAX_GEN(int mAX_GEN) {
 		MAX_GEN = mAX_GEN;
 	}
 
-	public int getBestLength() {
-		return bestLength;
-	}
-
-	public void setBestLength(int bestLength) {
-		this.bestLength = bestLength;
-	}
-
-	public int[] getBestTour() {
-		return bestTour;
-	}
-
-	public void setBestTour(int[] bestTour) {
-		this.bestTour = bestTour;
-	}
-
-	public double[] getAverageFitness() {
-		return averageFitness;
-	}
-
-	public void setAverageFitness(double[] averageFitness) {
-		this.averageFitness = averageFitness;
-	}
-
-	public int getN() {
-		return N;
-	}
-
-	public void setN(int n) {
-		N = n;
-	}
-
-	public int[][] getDistance() {
-		return distance;
-	}
-
-	public void setDistance(int[][] distance) {
-		this.distance = distance;
-	}
-
-	/**
-	 * @param args
-	 * @throws IOException
-	 */
-	public static void main(String[] args) throws IOException {
-		GA ga = new GA(100, 51, 100, 0.95, 0.75, "src\\main\\resources\\eil51.txt");
-		ga.solve();
+	public static void setElite_RATE(double eliteRate) {
+		GA.Elite_RATE = eliteRate;
 	}
 
 }
