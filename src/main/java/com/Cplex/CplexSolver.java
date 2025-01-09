@@ -36,11 +36,6 @@ public class CplexSolver implements TspSolver {
 
     public static void main(String[] args) throws IOException {
 
-        // Random random = new Random(666L);
-        // for (int cityNum = 30; cityNum <= 40; cityNum++) {
-        // solveByMip(cityNum, random);
-        // }
-
         TspProblem problem = TspProblem.read("src\\main\\resources\\eil51.txt", 51);
         TspPlan p = new CplexSolver(problem).solve();
         System.out.println("Cplex: " + p);

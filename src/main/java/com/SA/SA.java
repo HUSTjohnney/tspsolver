@@ -13,6 +13,7 @@ import com.TspProblem;
 public class SA implements TspSolver {
 
 	private TspProblem problem;
+	
 	private static double T0 = 1e6; // 初始温度
 	private static double d = 0.99; // 降温系数
 	private static double Tk = 1e-6; // 最低温度
