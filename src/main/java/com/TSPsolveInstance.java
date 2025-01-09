@@ -15,7 +15,7 @@ public class TSPsolveInstance {
     public static void main(String[] args) throws IOException {
 
         // 算例的节点数量
-        int nodeNum = 25;
+        int nodeNum = 50;
 
         // 选择算法
         String algorithm = "CPLEX";
