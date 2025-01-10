@@ -421,4 +421,10 @@ public class TS implements TspSolver {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("Unimplemented method 'solve'");
 	}
+
+
+	public static String getParam() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException("Unimplemented method 'getParam'");
+	}
 }

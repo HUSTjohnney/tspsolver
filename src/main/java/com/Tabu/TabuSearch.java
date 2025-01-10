@@ -140,4 +140,9 @@ public class TabuSearch implements TspSolver {
         System.out.println("Best distance: " + calculateDistance(tspProblem.getDist(), bestSolution));
     }
 
+    public static String getParam() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getParam'");
+    }
+
 }

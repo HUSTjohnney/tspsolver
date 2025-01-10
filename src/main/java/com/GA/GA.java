@@ -13,7 +13,7 @@ public class GA implements TspSolver {
 	/**
 	 * TSP问题对象，记录城市数量、城市坐标、城市之间的距离
 	 */
-	private TspProblem problem;
+	private final TspProblem problem;
 
 	/**
 	 * 染色体数组
@@ -23,7 +23,7 @@ public class GA implements TspSolver {
 	/**
 	 * 种群大小
 	 */
-	private static int choromosome_Num = 200;
+	private static int CHORO_NUM = 200;
 
 	/**
 	 * 交叉概率，即两个染色体进行交叉的概率
@@ -43,7 +43,7 @@ public class GA implements TspSolver {
 	/**
 	 * 精英保留策略的比例
 	 */
-	private static double Elite_RATE = 0.2;
+	private static double ELITE_RATE = 0.2;
 
 	/**
 	 * 基于 TSP 问题构造 GA 类
@@ -52,10 +52,10 @@ public class GA implements TspSolver {
 	 */
 	public GA(TspProblem problem) {
 		this.problem = problem;
-		this.chromosomes = new int[choromosome_Num][problem.getCityNum()];
+		this.chromosomes = new int[CHORO_NUM][problem.getCityNum()];
 
 		// 初始化种群
-		for (int i = 0; i < choromosome_Num; i++) {
+		for (int i = 0; i < CHORO_NUM; i++) {
 			chromosomes[i] = TSPUtils.findRandomRoute(problem.getCityNum());
 		}
 	}
@@ -65,19 +65,19 @@ public class GA implements TspSolver {
 	 * 
 	 */
 	private int[][] selection() {
-		int[][] selectedChromosomes = new int[choromosome_Num][problem.getCityNum()];
-		double[] fitness = new double[choromosome_Num];
+		int[][] selectedChromosomes = new int[CHORO_NUM][problem.getCityNum()];
+		double[] fitness = new double[CHORO_NUM];
 		double totalFitness = 0;
 
 		// 计算每个染色体的适应度、以及总适应度。
-		for (int i = 0; i < choromosome_Num; i++) {
+		for (int i = 0; i < CHORO_NUM; i++) {
 			// 适应度为路径长度的倒数
 			fitness[i] = 1.0 / TSPUtils.cost(chromosomes[i], problem.getDist());
 			totalFitness += fitness[i];
 		}
 
 		// 精英保留策略：先保留最优的几个染色体
-		int eliteSize = (int) (choromosome_Num * Elite_RATE);
+		int eliteSize = (int) (CHORO_NUM * ELITE_RATE);
 		double eliteFitnessSum = 0;
 		int[][] eliteChromosomes = getEliteChromosomes(eliteSize);
 		for (int i = 0; i < eliteSize; i++) {
@@ -86,10 +86,10 @@ public class GA implements TspSolver {
 		}
 
 		// 轮盘赌选择剩下的染色体
-		for (int i = eliteSize; i < choromosome_Num; i++) {
+		for (int i = eliteSize; i < CHORO_NUM; i++) {
 			double rouletteValue = Math.random() * (totalFitness - eliteFitnessSum);
 			double cumulativeFitness = 0;
-			for (int j = 0; j < choromosome_Num; j++) {
+			for (int j = 0; j < CHORO_NUM; j++) {
 				cumulativeFitness += fitness[j];
 				if (cumulativeFitness >= rouletteValue) {
 					selectedChromosomes[i] = chromosomes[j];
@@ -105,7 +105,7 @@ public class GA implements TspSolver {
 		int[][] eliteChromosomes = new int[eliteSize][problem.getCityNum()];
 		double[] eliteFitness = new double[eliteSize];
 		Arrays.fill(eliteFitness, Double.MAX_VALUE);
-		for (int i = 0; i < choromosome_Num; i++) {
+		for (int i = 0; i < CHORO_NUM; i++) {
 			double cost = TSPUtils.cost(chromosomes[i], problem.getDist());
 			for (int j = 0; j < eliteSize; j++) {
 				if (cost < eliteFitness[j]) {
@@ -128,9 +128,9 @@ public class GA implements TspSolver {
 	 * @param selectedChromosomes 选择后的染色体数组
 	 */
 	private int[][] crossover(int[][] selectedChromosomes) {
-		int[][] offspring = new int[choromosome_Num][problem.getCityNum()];
+		int[][] offspring = new int[CHORO_NUM][problem.getCityNum()];
 
-		for (int i = 0; i < choromosome_Num; i += 2) {
+		for (int i = 0; i < CHORO_NUM; i += 2) {
 			if (Math.random() < CROSS_RATE) {
 				int[][] children = crossover2Chromosome(selectedChromosomes[i], selectedChromosomes[i + 1]);
 				offspring[i] = children[0];
@@ -223,7 +223,7 @@ public class GA implements TspSolver {
 	 * @param offspring 交叉后的子代染色体数组
 	 */
 	private void mutation(int[][] offspring) {
-		for (int i = 0; i < choromosome_Num; i++) {
+		for (int i = 0; i < CHORO_NUM; i++) {
 			if (Math.random() < MUTATE_RATE) {
 				offspring[i] = TSPUtils.swap(offspring[i]);
 			}
@@ -251,7 +251,7 @@ public class GA implements TspSolver {
 		int[] bestRoute = chromosomes[0];
 		int bestCost = TSPUtils.cost(bestRoute, problem.getDist());
 
-		for (int i = 1; i < choromosome_Num; i++) {
+		for (int i = 1; i < CHORO_NUM; i++) {
 			int cost = TSPUtils.cost(chromosomes[i], problem.getDist());
 			if (cost < bestCost) {
 				bestRoute = chromosomes[i];
@@ -276,7 +276,7 @@ public class GA implements TspSolver {
 	public void printPopulation(int gen) {
 		System.out.println("_______________________________Generation:" + gen + "_______________________________");
 		int totoaCost = 0;
-		for (int i = 0; i < choromosome_Num; i++) {
+		for (int i = 0; i < CHORO_NUM; i++) {
 			int cost = TSPUtils.cost(chromosomes[i], problem.getDist());
 			totoaCost += cost;
 			System.out
@@ -284,12 +284,12 @@ public class GA implements TspSolver {
 		}
 
 		System.out.println(
-				"___________________avgCost:" + totoaCost / choromosome_Num + "___________________________________");
+				"___________________avgCost:" + totoaCost / CHORO_NUM + "___________________________________");
 	}
 
 	// gettes and setters
-	public static void setChoromosome_Num(int n) {
-		choromosome_Num = n;
+	public static void setCHORO_NUM(int n) {
+		CHORO_NUM = n;
 	}
 
 	public static void setCROSS_RATE(double p_c_t) {
@@ -304,8 +304,13 @@ public class GA implements TspSolver {
 		MAX_GEN = mAX_GEN;
 	}
 
-	public static void setElite_RATE(double eliteRate) {
-		GA.Elite_RATE = eliteRate;
+	public static void setELITE_RATE(double eliteRate) {
+		GA.ELITE_RATE = eliteRate;
+	}
+
+	public static String getParam() {
+		return "CHORO_NUM=" + CHORO_NUM + ", CROSS_RATE=" + CROSS_RATE + ", MUTATE_RATE=" + MUTATE_RATE
+				+ ", MAX_GEN=" + MAX_GEN + ", ELITE_RATE=" + ELITE_RATE;
 	}
 
 }

@@ -10,9 +10,9 @@ import java.util.Random;
 import java.util.Set;
 
 /**
- * TSP工具类
+ * TSP工具类，提供一些TSP问题的工具方法，无法实例成对象。
  */
-public class TSPUtils {
+public abstract class TSPUtils {
     /**
      * 判断路径是否合法，是否有重复的城市
      * 

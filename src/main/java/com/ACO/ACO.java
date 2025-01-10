@@ -12,17 +12,21 @@ public class ACO implements TspSolver {
 	private final TspProblem problem;
 
 	private Ant[] ants; // 蚂蚁
-	private int antNum; // 蚂蚁数量
-	private int cityNum; // 城市数量
-	private int MAX_GEN; // 运行代数
-	private float[][] pheromone; // 信息素矩阵
-	private int[][] distance; // 距离矩阵
-	private int bestLength; // 最佳长度
-	private int[] bestTour; // 最佳路径
 
-	private static float alpha; // 信息启发因子
-	private static float beta; // 期望启发因子
-	private static float rho; // 信息素挥发因子
+	private int cityNum; // 城市数量
+
+	private float[][] pheromone; // 信息素矩阵
+	private int bestCost; // 最佳长度
+	private int[] bestRoute; // 最佳路径
+
+	/**
+	 * ACO算法所需的参数
+	 */
+	private static int antNum; // 蚂蚁数量
+	private static int MAX_GEN; // 迭代次数
+	private static float ALPHA; // 信息启发因子
+	private static float BETA; // 期望启发因子
+	private static float RHO; // 信息素挥发因子
 
 	/**
 	 * ACO算法的构造函数
@@ -31,12 +35,10 @@ public class ACO implements TspSolver {
 	 * @param antNum  蚂蚁数量
 	 * @param max_gen 最大迭代次数
 	 */
-	public ACO(TspProblem problem, int antNum, int max_gen) {
+	public ACO(TspProblem problem) {
 		this.problem = problem;
 		this.cityNum = problem.getCityNum();
-		this.antNum = antNum;
 		this.ants = new Ant[antNum];
-		this.MAX_GEN = max_gen;
 		init();
 	}
 
@@ -45,8 +47,6 @@ public class ACO implements TspSolver {
 	 * 
 	 */
 	private void init() {
-		// 读取数据
-		distance = problem.getDist();
 
 		// 初始化信息素矩阵
 		pheromone = new float[cityNum][cityNum];
@@ -55,12 +55,12 @@ public class ACO implements TspSolver {
 				pheromone[i][j] = 0.1f; // 初始化为0.1
 			}
 		}
-		bestLength = Integer.MAX_VALUE;
-		bestTour = new int[cityNum + 1];
+		bestCost = Integer.MAX_VALUE;
+		bestRoute = new int[cityNum + 1];
 		// 随机放置蚂蚁
 		for (int i = 0; i < antNum; i++) {
-			ants[i] = new Ant(cityNum);
-			ants[i].init(distance, alpha, beta);
+			ants[i] = new Ant(cityNum, ALPHA, BETA);
+			ants[i].init(problem.getDist());
 		}
 	}
 
@@ -78,33 +78,33 @@ public class ACO implements TspSolver {
 				// 禁忌表最终形式：起始城市,城市1,城市2...城市n,起始城市
 				ants[i].getTabu().add(ants[i].getFirstCity());
 				// 查看这只蚂蚁行走路径距离是否比当前距离优秀
-				if (ants[i].getTourLength() < bestLength) {
+				if (ants[i].getRouteLength() < bestCost) {
 					// 比当前优秀则拷贝优秀TSP路径
-					bestLength = ants[i].getTourLength();
+					bestCost = ants[i].getRouteLength();
 					for (int k = 0; k < cityNum + 1; k++) {
-						bestTour[k] = ants[i].getTabu().get(k).intValue();
+						bestRoute[k] = ants[i].getTabu().get(k).intValue();
 					}
 				}
 				// 更新这只蚂蚁的信息数变化矩阵，对称矩阵
 				for (int j = 0; j < cityNum; j++) {
 					ants[i].getDelta()[ants[i].getTabu().get(j).intValue()][ants[i]
 							.getTabu().get(j + 1).intValue()] = (float) (1. / ants[i]
-									.getTourLength());
+									.getRouteLength());
 					ants[i].getDelta()[ants[i].getTabu().get(j + 1).intValue()][ants[i]
 							.getTabu().get(j).intValue()] = (float) (1. / ants[i]
-									.getTourLength());
+									.getRouteLength());
 				}
 			}
 			// 更新信息素
 			updatePheromone();
 			// 重新初始化蚂蚁
 			for (int i = 0; i < antNum; i++) {
-				ants[i].init(distance, alpha, beta);
+				ants[i].init(problem.getDist());
 			}
 		}
 
 		long endTime = System.currentTimeMillis();
-		return new TspPlan(bestTour, bestLength, (endTime - startTime) / 1000.0);
+		return new TspPlan(bestRoute, bestCost, (endTime - startTime) / 1000.0);
 	}
 
 	// 更新信息素
@@ -112,7 +112,7 @@ public class ACO implements TspSolver {
 		// 信息素挥发
 		for (int i = 0; i < cityNum; i++)
 			for (int j = 0; j < cityNum; j++)
-				pheromone[i][j] = pheromone[i][j] * (1 - rho);
+				pheromone[i][j] = pheromone[i][j] * (1 - RHO);
 
 		// 信息素更新
 		for (int i = 0; i < cityNum; i++) {
@@ -130,37 +130,51 @@ public class ACO implements TspSolver {
 	 */
 	public static void main(String[] args) throws IOException {
 		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
-		ACO aco = new ACO(problem, 10, 100);
-		ACO.setAlpha(1.f);
-		ACO.setBeta(5.f);
-		ACO.setRho(0.5f);
+		ACO aco = new ACO(problem);
+		ACO.setAntNum(20);
+		ACO.setMAX_GEN(100);
+		ACO.setALPHA(1.f);
+		ACO.setBETA(5.f);
+		ACO.setRHO(0.5f);
 		TspPlan plan = aco.solve();
 		System.out.println("The plan is: " + plan);
 	}
 
 	// getter and setter
-	public static float getAlpha() {
-		return alpha;
+	public static float getALPHA() {
+		return ALPHA;
 	}
 
-	public static void setAlpha(float alpha) {
-		ACO.alpha = alpha;
+	public static void setALPHA(float alpha) {
+		ACO.ALPHA = alpha;
 	}
 
-	public static float getBeta() {
-		return beta;
+	public static float getBETA() {
+		return BETA;
 	}
 
-	public static void setBeta(float beta) {
-		ACO.beta = beta;
+	public static void setBETA(float beta) {
+		ACO.BETA = beta;
 	}
 
-	public static float getRho() {
-		return rho;
+	public static float getRHO() {
+		return RHO;
 	}
 
-	public static void setRho(float rho) {
-		ACO.rho = rho;
+	public static void setRHO(float rho) {
+		ACO.RHO = rho;
+	}
+
+	public static void setAntNum(int antNum) {
+		ACO.antNum = antNum;
+	}
+
+	public static void setMAX_GEN(int mAX_GEN) {
+		MAX_GEN = mAX_GEN;
+	}
+
+	public static String getParam() {
+		return "ALPHA=" + ALPHA + ", BETA=" + BETA + ", RHO=" + RHO;
 	}
 
 }

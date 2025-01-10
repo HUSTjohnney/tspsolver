@@ -12,6 +12,8 @@ import com.TspProblem;
 
 public class PSO {
 
+	// public final TspProblem problem;
+
 	private int bestNum;
 	private float w;
 	private int MAX_GEN;// the times of evolution
@@ -35,10 +37,6 @@ public class PSO {
 	private int[] fitness;// the fitness of population
 
 	private Random random;
-
-	public PSO() {
-
-	}
 
 	/**
 	 * constructor of GA

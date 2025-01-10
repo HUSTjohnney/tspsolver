@@ -13,12 +13,12 @@ import com.TspProblem;
 
 public class SA implements TspSolver {
 
-	private TspProblem problem;
+	private final TspProblem problem;
 
-	private static double initialTemporature = 1e6; // 初始温度
-	private static double decresRate = 0.99; // 降温系数
-	private static double temperatureLB = 1e-6; // 最低温度
-	private static int iterTimes = 1000; // 每个温度下的迭代次数
+	private static double INIT_TEMP = 1e6; // 初始温度
+	private static double DECRESE_RATE = 0.99; // 降温系数
+	private static double TEMP_LB = 1e-6; // 最低温度
+	private static int MAX_ITER_TIME = 1000; // 每个温度下的迭代次数
 
 	/**
 	 * 构造函数
@@ -73,13 +73,13 @@ public class SA implements TspSolver {
 		long startTime = System.currentTimeMillis();
 		int[] initRout = getInitRoute();
 		int[] bestpath, curentpath;
-		double t = initialTemporature;
+		double t = INIT_TEMP;
 		bestpath = curentpath = Arrays.copyOf(initRout, initRout.length);
 		Random random = new Random();
 
-		while (t > temperatureLB) {
+		while (t > TEMP_LB) {
 			int it = 0;
-			while (it < iterTimes) {
+			while (it < MAX_ITER_TIME) {
 				int[] update_path = TSPUtils.swap(curentpath);
 				int delta = TSPUtils.cost(update_path, problem.getDist())
 						- TSPUtils.cost(curentpath, problem.getDist());
@@ -95,7 +95,7 @@ public class SA implements TspSolver {
 				it++;
 			}
 			// 降温
-			t *= decresRate;
+			t *= DECRESE_RATE;
 		}
 
 		long endTime = System.currentTimeMillis();
@@ -107,10 +107,10 @@ public class SA implements TspSolver {
 		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
 		SA sa = new SA(problem);
 		int[] rout = sa.getInitRoute();
-		SA.setInitialTemporature(1e6);
-		SA.setDecresRate(0.99);
-		SA.setTemperatureLB(1e-6);
-		SA.setIterTimes(100 * rout.length);
+		SA.setINIT_TEMP(1e6);
+		SA.setDECRESE_RATE(0.99);
+		SA.setTEMP_LB(1e-6);
+		SA.setMAX_ITER_TIME(100 * rout.length);
 		TspPlan plan = sa.solve();
 		System.out.println(plan);
 		System.out.println(plan.getRoute().length);
@@ -121,40 +121,41 @@ public class SA implements TspSolver {
 		return problem;
 	}
 
-	public void setProblem(TspProblem problem) {
-		this.problem = problem;
+	public static double getINIT_TEMP() {
+		return INIT_TEMP;
 	}
 
-	public static double getInitialTemporature() {
-		return initialTemporature;
+	public static void setINIT_TEMP(double t0) {
+		INIT_TEMP = t0;
 	}
 
-	public static void setInitialTemporature(double t0) {
-		initialTemporature = t0;
+	public static double getDECRESE_RATE() {
+		return DECRESE_RATE;
 	}
 
-	public static double getDecresRate() {
-		return decresRate;
+	public static void setDECRESE_RATE(double d) {
+		SA.DECRESE_RATE = d;
 	}
 
-	public static void setDecresRate(double d) {
-		SA.decresRate = d;
+	public static double getTEMP_LB() {
+		return TEMP_LB;
 	}
 
-	public static double getTemperatureLB() {
-		return temperatureLB;
+	public static void setTEMP_LB(double tk) {
+		TEMP_LB = tk;
 	}
 
-	public static void setTemperatureLB(double tk) {
-		temperatureLB = tk;
+	public static int getMAX_ITER_TIME() {
+		return MAX_ITER_TIME;
 	}
 
-	public static int getIterTimes() {
-		return iterTimes;
+	public static void setMAX_ITER_TIME(int l) {
+		MAX_ITER_TIME = l;
 	}
 
-	public static void setIterTimes(int l) {
-		iterTimes = l;
+	public static String getParam() {
+		return "INIT_TEMP=" + INIT_TEMP + ", DECRESE_RATE=" + DECRESE_RATE + ", TEMP_LB=" + TEMP_LB + ", MAX_ITER_TIME="
+				+ MAX_ITER_TIME;
 	}
 
 }

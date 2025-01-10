@@ -8,60 +8,56 @@ public class Ant implements Cloneable {
     private Vector<Integer> tabu; // 禁忌表
     private Vector<Integer> allowedCities; // 允许搜索的城市
     private float[][] delta; // 信息数变化矩阵
-    private int[][] distance; // 距离矩阵
-    private float alpha;
-    private float beta;
+    private int[][] dist; // 距离矩阵
 
-    private int tourLength; // 路径长度
-    private int cityNum; // 城市数量
-    private int firstCity; // 起始城市
+    private final float ALPHA; // 信息启发因子
+    private final float BETA; // 期望启发因子
+
+    private final int cityNum; // 蚂蚁所需走的城市数量
+    private final int firstCity; // 蚂蚁所在的起始城市
+
+    private int routeLength; // 路径长度
     private int currentCity; // 当前城市
-
-    public Ant() {
-        cityNum = 30;
-        tourLength = 0;
-    }
 
     /**
      * Constructor of Ant
      * 
-     * @param num
-     *            蚂蚁数量
+     * @param citynum 蚂蚁数量
      */
-    public Ant(int num) {
-        cityNum = num;
-        tourLength = 0;
+    public Ant(int citynum, float alpha, float beta) {
+        cityNum = citynum;
+        routeLength = Integer.MAX_VALUE;
+        // 随机挑选一个城市作为起始城市
+        Random random = new Random(System.currentTimeMillis());
+        firstCity = random.nextInt(cityNum);
+        this.ALPHA = alpha;
+        this.BETA = beta;
     }
 
     /**
      * 初始化蚂蚁，随机选择起始位置
      * 
      * @param distance 距离矩阵
-     * @param a        alpha
-     * @param b        beta
+     * @param alpha    信息启发因子
+     * @param beta     期望启发因子
      */
 
-    public void init(int[][] distance, float a, float b) {
-        alpha = a;
-        beta = b;
+    public void init(int[][] distance) {
         // 初始允许搜索的城市集合
         allowedCities = new Vector<Integer>();
         // 初始禁忌表
         tabu = new Vector<Integer>();
         // 初始距离矩阵
-        this.distance = distance;
+        this.dist = distance;
         // 初始信息数变化矩阵为0
         delta = new float[cityNum][cityNum];
         for (int i = 0; i < cityNum; i++) {
-            Integer integer = new Integer(i);
-            allowedCities.add(integer);
+            allowedCities.add(i);
             for (int j = 0; j < cityNum; j++) {
                 delta[i][j] = 0.f;
             }
         }
-        // 随机挑选一个城市作为起始城市
-        Random random = new Random(System.currentTimeMillis());
-        firstCity = random.nextInt(cityNum);
+
         // 允许搜索的城市集合中移除起始城市
         for (Integer i : allowedCities) {
             if (i.intValue() == firstCity) {
@@ -87,16 +83,16 @@ public class Ant implements Cloneable {
         float sum = 0.0f;
         // 计算分母部分
         for (Integer i : allowedCities) {
-            sum += Math.pow(pheromone[currentCity][i.intValue()], alpha)
-                    * Math.pow(1.0 / distance[currentCity][i.intValue()], beta);
+            sum += Math.pow(pheromone[currentCity][i.intValue()], ALPHA)
+                    * Math.pow(1.0 / dist[currentCity][i.intValue()], BETA);
         }
         // 计算概率矩阵
         for (int i = 0; i < cityNum; i++) {
             boolean flag = false;
             for (Integer j : allowedCities) {
                 if (i == j.intValue()) {
-                    p[i] = (float) (Math.pow(pheromone[currentCity][i], alpha) * Math
-                            .pow(1.0 / distance[currentCity][i], beta)) / sum;
+                    p[i] = (float) (Math.pow(pheromone[currentCity][i], ALPHA) * Math
+                            .pow(1.0 / dist[currentCity][i], BETA)) / sum;
                     flag = true;
                     break;
                 }
@@ -139,7 +135,7 @@ public class Ant implements Cloneable {
         int len = 0;
         // 禁忌表tabu最终形式：起始城市,城市1,城市2...城市n,起始城市
         for (int i = 0; i < cityNum; i++) {
-            len += distance[this.tabu.get(i).intValue()][this.tabu.get(i + 1)
+            len += dist[this.tabu.get(i).intValue()][this.tabu.get(i + 1)
                     .intValue()];
         }
         return len;
@@ -153,21 +149,17 @@ public class Ant implements Cloneable {
         this.allowedCities = allowedCities;
     }
 
-    public int getTourLength() {
-        tourLength = calculateTourLength();
-        return tourLength;
+    public int getRouteLength() {
+        routeLength = calculateTourLength();
+        return routeLength;
     }
 
-    public void setTourLength(int tourLength) {
-        this.tourLength = tourLength;
+    public void setRouteLength(int tourLength) {
+        this.routeLength = tourLength;
     }
 
     public int getCityNum() {
         return cityNum;
-    }
-
-    public void setCityNum(int cityNum) {
-        this.cityNum = cityNum;
     }
 
     public Vector<Integer> getTabu() {
@@ -188,10 +180,6 @@ public class Ant implements Cloneable {
 
     public int getFirstCity() {
         return firstCity;
-    }
-
-    public void setFirstCity(int firstCity) {
-        this.firstCity = firstCity;
     }
 
 }

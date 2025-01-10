@@ -16,10 +16,10 @@ import ilog.cplex.IloCplex;
 
 public class CplexSolver implements TspSolver {
 
-    private TspProblem problem;
+    private final TspProblem problem;
 
     // 城市坐标<[x,y]>
-    private List<int[]> locationList;
+    private final List<int[]> locationList;
 
     /**
      * 构造函数，初始化城市坐标
@@ -138,6 +138,10 @@ public class CplexSolver implements TspSolver {
         }
         return null;
 
+    }
+
+    public static String getParam() {
+        return "NONE PARAM";
     }
 
 }
