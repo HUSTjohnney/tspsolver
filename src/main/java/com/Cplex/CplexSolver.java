@@ -141,7 +141,7 @@ public class CplexSolver implements TspSolver {
     }
 
     public static String getParam() {
-        return "NONE PARAM";
+        return "NONE PARAM NEEDED";
     }
 
 }

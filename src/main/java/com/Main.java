@@ -1,4 +1,4 @@
-package com.pso;
+package com;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +50,75 @@ public class Main {
             }
         }
         return ret;
+    }
+
+    public int lengthOfLIS(int[] nums) {
+        // 暴力搜索O(n^k)其中k是返回的长度
+        // 动态规划，从后往前。存储开头的数字，以及练成串的序列。
+        // f(8) = {18,1};
+        // f(7) = {101,1}
+        // f(6) = {7,2}
+        // f(5) = {3,3}
+        // f(4) = {5,3}
+        // f(3) = {2,4}
+
+        int ans = 1, n = nums.length - 1;
+        Map<Integer, Integer> list = new HashMap<>();
+        list.put(nums[n], 1);
+        for (int i = n - 1; i >= 0; i--) {
+            for (int val : list.keySet()) {
+                if (val < nums[i]) {
+                    list.put(nums[i], Math.max(list.getOrDefault(nums[i], 1), list.get(val)));
+                }
+            }
+        }
+        // 找到最大的val
+        for (int val : list.values()) {
+            ans = Math.max(ans, val);
+        }
+        return ans;
+    }
+    
+    public List<Integer> partitionLabels(String s) {
+        // 最开始分配成1个区间
+        // 遍历一遍，记录字母的最后出现时刻和最早出现时刻？
+        Map<Character, int[]> map = new HashMap<>();
+        char[] ss = s.toCharArray();
+        for (int i = 0; i < ss.length; i++) {
+            char c = ss[i];
+            if (!map.containsKey(c)) {
+                map.put(c, new int[] { i, i });
+            } else {
+                map.get(c)[1] = i;
+            }
+            System.out.println(c + "," + map.get(c)[0] + "," + map.get(c)[1]);
+        }
+        return null;
+
+    }
+    
+    public int jump(int[] nums) {
+        // 动态规划 f[当前位置] = 到当前位置所需的最小步数
+        // f[0] = 0 初始位置，无需跳跃
+        // f[1] = 1 if(f[0]+nums[0]>=1)
+        // f[2] = min(f[0]+nums[0]>=2,f[1]+nums[1])
+        // f[3] = min(f[0]+nums[0],)
+        
+        int[] f = new int[nums.length];
+        for(int i = 0;i<nums.length;i++){
+            f[i] = Integer.MAX_VALUE;
+        }
+        f[0] = 0;
+        for (int i = 1; i < nums.length; i++) {
+            for (int j = 0; j < i; j++) {
+                if (f[j] + nums[j] > i) {
+                    f[i] = Math.min(f[i], f[j] + 1);
+                }
+            }
+        }
+        char c = "ssss".toCharArray()[2];
+
+        return 0;
     }
 
     public void rotate(int[][] matrix) {
