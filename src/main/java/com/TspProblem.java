@@ -1,14 +1,9 @@
 package com;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 public class TspProblem {
 	private final int[] xCoors; // 城市的x坐标
 	private final int[] yCoors; // 城市的y坐标
-	private final int[][] dist; // 两个城市之间的距离\
+	private final int[][] dist; // 两个城市之间的距离
 	private final int cityNum; // 城市数量
 
 	/**
@@ -26,15 +21,15 @@ public class TspProblem {
 	}
 
 	/**
-	 * 基于已有的TspProblem对象构造新的TspProblem对象
+	 * 基于其他TspProblem对象构造新的TspProblem对象
 	 * 
-	 * @param problem 已有的TspProblem对象
+	 * @param other 其他TspProblem对象
 	 */
-	public TspProblem(TspProblem problem) {
-		this.xCoors = problem.getxCoors();
-		this.yCoors = problem.getyCoors();
-		this.dist = problem.getDist();
-		this.cityNum = problem.getCityNum();
+	public TspProblem(TspProblem other) {
+		this.xCoors = other.getxCoors();
+		this.yCoors = other.getyCoors();
+		this.dist = other.getDist();
+		this.cityNum = other.getCityNum();
 	}
 
 	/**
@@ -57,11 +52,11 @@ public class TspProblem {
 	/**
 	 * 计算两个城市之间的欧式距离
 	 * 
-	 * @param x1
-	 * @param x2
-	 * @param y1
-	 * @param y2
-	 * @return
+	 * @param x1 第一个城市的x坐标
+	 * @param x2 第二个城市的x坐标
+	 * @param y1 第一个城市的y坐标
+	 * @param y2 第二个城市的y坐标
+	 * @return 两个城市之间的距离
 	 */
 	public static int EUC_2D_dist(int x1, int x2, int y1, int y2) {
 		return (int) Math.sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
@@ -83,7 +78,6 @@ public class TspProblem {
 		return distance;
 	}
 
-	
 	// getters and setters
 	public int[] getxCoors() {
 		return xCoors;
@@ -100,5 +94,4 @@ public class TspProblem {
 	public int getCityNum() {
 		return cityNum;
 	}
-
 }

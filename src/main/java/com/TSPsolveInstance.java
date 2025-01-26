@@ -31,8 +31,7 @@ public class TSPsolveInstance {
             SA.setMAX_ITER_TIME(50 * nodeNum);
             para = SA.getParam();
         } else if (algorithm.equals("Greedy")) {
-            // plan = new Greedy(tsp).solve();
-            // TODO: 实现 Greedy 算法
+            para = Greedy.getParam();
         } else if (algorithm.equals("GA")) {
             GA.setCHORO_NUM(nodeNum * 10); // 种群数量
             GA.setCROSS_RATE(0.8); // 交叉率
@@ -71,7 +70,7 @@ public class TSPsolveInstance {
 
         // 写入表头
         writer.write(String.format("%-10s %-10s %-10s %-10s \n", "Problem", "Cost", "Time(s)", "Mermory(MB)"));
-        
+
         Double avgCost = 0.0;
         Double avgTime = 0.0;
         Double avgMemory = 0.0;
@@ -93,8 +92,7 @@ public class TSPsolveInstance {
                 SA.setMAX_ITER_TIME(50 * nodeNum);
                 plan = new SA(tsp).solve();
             } else if (algorithm.equals("Greedy")) {
-                // plan = new Greedy(tsp).solve();
-                // TODO: 实现 Greedy 算法
+                plan = new Greedy(tsp).solve();
             } else if (algorithm.equals("GA")) {
                 GA.setCHORO_NUM(nodeNum * 10); // 种群数量
                 GA.setCROSS_RATE(0.9); // 交叉率
@@ -122,10 +120,11 @@ public class TSPsolveInstance {
                 avgMemory += plan.getMemoryUsage();
             }
         }
-        
+
         // 写入平均值
         writer.write("--------------------------------------------------\n");
-        writer.write(String.format("%-10s %-10.2f %-10.2f %-10.2f \n", "Average", avgCost / 20, avgTime / 20, avgMemory / 20));
+        writer.write(String.format("%-10s %-10.2f %-10.2f %-10.2f \n", "Average", avgCost / 20, avgTime / 20,
+                avgMemory / 20));
 
         // 关闭文件写入流
         writer.close();

@@ -48,7 +48,6 @@ public class TspPlan {
         for (int i = 1; i < rout.length; i++) {
             sb.append("->").append(rout[i]);
         }
-        sb.append("->0");
         return sb.toString();
     }
 

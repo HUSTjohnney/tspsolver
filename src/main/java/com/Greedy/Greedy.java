@@ -1,182 +1,113 @@
 package com.greedy;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.TSPUtils;
+import com.TspPlan;
+import com.TspProblem;
+
+/**
+ * 贪心算法求解TSP问题。
+ * 从0节点开始，每次选择距离最近的节点，直到所有节点都被访问过。
+ */
 public class Greedy {
-	private int cityNum; // ��������
-	private int[][] distance; // �������
 
-	private int[] colable;// �����У�Ҳ��ʾ�Ƿ��߹����߹���0
-	private int[] row;// �����У�ѡ����0
+	/**
+	 * TSP问题类，包含城市数量、距离矩阵等信息
+	 */
+	private TspProblem problem;
 
-	public Greedy(int n) {
-		cityNum = n;
+	/**
+	 * 被访问过的节点
+	 */
+	private Set<Integer> visited;
+
+	public Greedy(TspProblem p) {
+		this.problem = p;
+		this.visited = new HashSet<>();
 	}
 
-	public void init(String filename) throws IOException {
-		// ��ȡ����
-		int[] x;
-		int[] y;
-		String strbuff;
-		BufferedReader data = new BufferedReader(new InputStreamReader(
-				new FileInputStream(filename)));
-		distance = new int[cityNum][cityNum];
-		x = new int[cityNum];
-		y = new int[cityNum];
-		// ����ͷ�������õ�˵��
-		while ((strbuff = data.readLine()) != null) {
-			if (!Character.isAlphabetic(strbuff.charAt(0)))
-				break;
-		}
-		String[] tmp = strbuff.split(" ");
-		x[0] = Integer.valueOf(tmp[1]);// x����
-		y[0] = Integer.valueOf(tmp[2]);// y����
+	/**
+	 * 对TSP问题进行贪心算法求解
+	 * 
+	 * @return TSP问题的解
+	 */
+	public TspPlan solve() {
 
-		for (int i = 1; i < cityNum; i++) {
-			// ��ȡһ�����ݣ����ݸ�ʽ1 6734 1453
-			strbuff = data.readLine();
-			// �ַ��ָ�
-			String[] strcol = strbuff.split(" ");
-			x[i] = Integer.valueOf(strcol[1]);// x����
-			y[i] = Integer.valueOf(strcol[2]);// y����
-		}
-		data.close();
+		long startTime = System.currentTimeMillis();
 
-		// ����������
-		// ����Ծ������⣬������㷽��Ҳ��һ�����˴��õ���att48��Ϊ����������48�����У�������㷽��Ϊαŷ�Ͼ��룬����ֵΪ10628
-		for (int i = 0; i < cityNum - 1; i++) {
-			distance[i][i] = 0; // �Խ���Ϊ0
-			for (int j = i + 1; j < cityNum; j++) {
-				distance[i][j] = EUC_2D_dist(x[i], x[j], y[i], y[j]);
-				distance[j][i] = distance[i][j];
-				//
-				// double rij = Math
-				// .sqrt(((x[i] - x[j]) * (x[i] - x[j]) + (y[i] - y[j])
-				// * (y[i] - y[j])) / 10.0);
-				// // �������룬ȡ��
-				// int tij = (int) Math.round(rij);
-				// if (tij < rij) {
-				// distance[i][j] = tij + 1;
-				// distance[j][i] = distance[i][j];
-				// } else {
-				// distance[i][j] = tij;
-				// distance[j][i] = distance[i][j];
-				// }
-			}
-		}
+		/**
+		 * 初始节点，从0节点开始
+		 */
+		int nextCity = 0;
 
-		distance[cityNum - 1][cityNum - 1] = 0;
+		/**
+		 * 返回找到的路径
+		 */
+		int[] path = new int[problem.getCityNum()];
+		path[0] = nextCity;
 
-		colable = new int[cityNum];
-		colable[0] = 0;
-		for (int i = 1; i < cityNum; i++) {
-			colable[i] = 1;
-		}
+		visited.add(nextCity);
 
-		row = new int[cityNum];
-		for (int i = 0; i < cityNum; i++) {
-			row[i] = 1;
-		}
+		while (visited.size() < problem.getCityNum()) {
+			/**
+			 * 从当前节点到下一个节点的距离向量
+			 */
+			int[] cityCost = new int[problem.getCityNum()];
 
-	}
-
-	public int ATT_dist(int x1, int x2, int y1, int y2) {
-		double rij = Math
-				.sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2)
-						* (y1 - y2)) / 10.0);
-		// �������룬ȡ��
-		int tij = (int) Math.round(rij);
-		if (tij < rij) {
-			return tij + 1;
-		} else {
-			return tij;
-		}
-	}
-
-	public int EUC_2D_dist(int x1, int x2, int y1, int y2) {
-		return (int) Math.sqrt(((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
-	}
-
-	public void solve() {
-
-		int[] temp = new int[cityNum];
-		String path = "0";
-
-		int s = 0;// �������
-		int i = 0;// ��ǰ�ڵ�
-		int j = 0;// ��һ���ڵ�
-		// Ĭ�ϴ�0��ʼ
-		while (row[i] == 1) {
-			// ����һ��
-			for (int k = 0; k < cityNum; k++) {
-				temp[k] = distance[i][k];
-				// System.out.print(temp[k]+" ");
-			}
-			// System.out.println();
-			// ѡ����һ���ڵ㣬Ҫ�����Ѿ��߹���������i��ͬ
-			j = selectmin(temp);
-			// �ҳ���һ�ڵ�
-			row[i] = 0;// ����0����ʾ�Ѿ�ѡ��
-			colable[j] = 0;// ��0����ʾ�Ѿ��߹�
-
-			path += "-->" + j;
-			// System.out.println(i + "-->" + j);
-			// System.out.println(distance[i][j]);
-			s = s + distance[i][j];
-			i = j;// ��ǰ�ڵ�ָ����һ�ڵ�
-		}
-		System.out.println("·��:" + path);
-		System.out.println("�ܾ���Ϊ:" + s);
-
-	}
-
-	public int selectmin(int[] p) {
-		int j = 0, m = p[0], k = 0;
-		// Ѱ�ҵ�һ�����ýڵ㣬ע�����һ��Ѱ�ң�û�п��ýڵ�
-		while (colable[j] == 0) {
-			j++;
-			// System.out.print(j+" ");
-			if (j >= cityNum) {
-				// û�п��ýڵ㣬˵���ѽ��������һ��Ϊ *-->0
-				m = p[0];
-				break;
-				// ����ֱ��return 0;
-			} else {
-				m = p[j];
-			}
-		}
-		// �ӿ��ýڵ�J��ʼ����ɨ�裬�ҳ�������С�ڵ�
-		for (; j < cityNum; j++) {
-			if (colable[j] == 1) {
-				if (m >= p[j]) {
-					m = p[j];
-					k = j;
+			for (int i = 0; i < problem.getCityNum(); i++) {
+				// 如果节点没有被访问过，设置距离为NextCity到其他节点之间的距离
+				if (!visited.contains(i)) {
+					cityCost[i] = problem.getDist()[nextCity][i];
+				} else {
+					// 被访问过的节点距离设置为无穷大的距离
+					cityCost[i] = Integer.MAX_VALUE;
 				}
 			}
-		}
-		return k;
-	}
 
-	public void printinit() {
-		System.out.println("print begin....");
-		for (int i = 0; i < cityNum; i++) {
-			for (int j = 0; j < cityNum; j++) {
-				System.out.print(distance[i][j] + " ");
+			// 打印当前节点到其他节点的距离
+			System.out.print("CityCost: ");
+			for (int i = 0; i < problem.getCityNum(); i++) {
+				System.out.print(((cityCost[i] == Integer.MAX_VALUE) ? "MAX" : cityCost[i]) + " ");
 			}
 			System.out.println();
+
+			// 基于贪心策略，找到下一个节点
+			int minCost = Integer.MAX_VALUE;
+			for (int i = 0; i < problem.getCityNum(); i++) {
+				if (cityCost[i] < minCost) {
+					minCost = cityCost[i];
+					nextCity = i;
+				}
+			}
+
+			// 打印下一个节点
+			System.out.println("NextCity: " + nextCity + " Cost: " + minCost);
+
+			path[visited.size()] = nextCity;
+
+			visited.add(nextCity); // 将下一个节点加入已访问节点集合
 		}
-		System.out.println("print end....");
+
+		long endTime = System.currentTimeMillis();
+
+		return new TspPlan(path, TSPUtils.cost(path, problem.getDist()), (endTime - startTime) / 1000.00);
 	}
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("Start....");
-		Greedy ts = new Greedy(51);
-		ts.init("src\\main\\resources\\eil51.txt");
-		// ts.printinit();
-		ts.solve();
+		TspProblem problem = TSPUtils.read("src/main/resources/25Nodes/p01.txt", 25);
+		TspPlan p = new Greedy(problem).solve();
+
+		System.out.println("Greedy: " + p);
+
+		System.out.println("Greedy: " + getParam());
+
+		System.out.println("Path length:" + p.getRoute().length);
 	}
 
+	public static String getParam() {
+		return "NONE PARAMETER NEEDED";
+	}
 }

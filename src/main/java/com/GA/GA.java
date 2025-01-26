@@ -268,13 +268,17 @@ public class GA implements TspSolver {
 		TspPlan p = new GA(problem).solve();
 		System.out.println("GA: " + p);
 
+		System.out.println("GA: " + getParam());
+
+		System.out.println("Path length:" + p.getRoute().length);
+
 	}
 
 	/**
 	 * 打印一代种群，及其路径成本
 	 */
 	public void printPopulation(int gen) {
-		System.out.println("_______________________________Generation:" + gen + "_______________________________");
+		System.out.println("__________________________Generation:" + gen + "__________________________");
 		int totoaCost = 0;
 		for (int i = 0; i < CHORO_NUM; i++) {
 			int cost = TSPUtils.cost(chromosomes[i], problem.getDist());
@@ -284,7 +288,7 @@ public class GA implements TspSolver {
 		}
 
 		System.out.println(
-				"___________________avgCost:" + totoaCost / CHORO_NUM + "___________________________________");
+				"__________________________avgCost:" + totoaCost / CHORO_NUM + "__________________________");
 	}
 
 	// gettes and setters

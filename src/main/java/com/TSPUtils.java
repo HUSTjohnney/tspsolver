@@ -110,19 +110,18 @@ public abstract class TSPUtils {
     /**
      * 读取TSP问题
      * 
-     * @param filename
-     * @param numCities
-     * @return
-     * @throws IOException
+     * @param filename  TSP问题文件的路径及其名称
+     * @param numCities 城市数量
+     * @return TSP问题实例
+     * @throws IOException 读取文件异常
      */
     public static TspProblem read(String filename, int numCities) throws IOException {
-        int[] x;
-        int[] y;
-        String strbuff;
+        String strbuff; // 读取文件的缓冲区
+        
         BufferedReader data = new BufferedReader(new InputStreamReader(
                 new FileInputStream(filename)));
-        x = new int[numCities];
-        y = new int[numCities];
+        int[] x = new int[numCities]; // 城市x坐标
+        int[] y = new int[numCities]; // 城市y坐标
 
         while ((strbuff = data.readLine()) != null) {
             if (!Character.isAlphabetic(strbuff.charAt(0)))
