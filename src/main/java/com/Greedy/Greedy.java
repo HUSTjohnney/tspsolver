@@ -67,13 +67,6 @@ public class Greedy {
 				}
 			}
 
-			// 打印当前节点到其他节点的距离
-			System.out.print("CityCost: ");
-			for (int i = 0; i < problem.getCityNum(); i++) {
-				System.out.print(((cityCost[i] == Integer.MAX_VALUE) ? "MAX" : cityCost[i]) + " ");
-			}
-			System.out.println();
-
 			// 基于贪心策略，找到下一个节点
 			int minCost = Integer.MAX_VALUE;
 			for (int i = 0; i < problem.getCityNum(); i++) {
@@ -84,7 +77,7 @@ public class Greedy {
 			}
 
 			// 打印下一个节点
-			System.out.println("NextCity: " + nextCity + " Cost: " + minCost);
+			// System.out.println("NextCity: " + nextCity + " Cost: " + minCost);
 
 			path[visited.size()] = nextCity;
 
