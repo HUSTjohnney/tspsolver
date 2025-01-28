@@ -13,17 +13,6 @@
     </properties>
 
     <dependencies>
-        <!-- 绘图工具依赖-->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-             <version>17.0.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>17.0.7</version>
-        </dependency>
         <!-- JUnit 5 依赖 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
