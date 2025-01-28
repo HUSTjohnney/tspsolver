@@ -13,12 +13,30 @@ import com.TspProblem;
 
 public class SA implements TspSolver {
 
+	/**
+	 * TSP问题实例
+	 */
 	private final TspProblem problem;
 
-	private static double INIT_TEMP = 1e6; // 初始温度
-	private static double DECRESE_RATE = 0.99; // 降温系数
-	private static double TEMP_LB = 1e-6; // 最低温度
-	private static int MAX_ITER_TIME = 1000; // 每个温度下的迭代次数
+	/**
+	 * 初始温度
+	 */
+	private static double INIT_TEMP = 1e6;
+
+	/**
+	 * 降温系数
+	 */
+	private static double DECRESE_RATE = 0.99;
+
+	/**
+	 * 最低温度
+	 */
+	private static double TEMP_LB = 1e-6;
+
+	/**
+	 * 每个温度下的迭代次数
+	 */
+	private static int MAX_ITER_TIME = 1000;
 
 	/**
 	 * 构造函数
@@ -105,7 +123,7 @@ public class SA implements TspSolver {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
+		TspProblem problem = TSPUtils.read("src\\main\\resources\\25Nodes\\p01.txt");
 		SA sa = new SA(problem);
 		int[] rout = sa.getInitRoute();
 		SA.setINIT_TEMP(1e6);
@@ -114,7 +132,9 @@ public class SA implements TspSolver {
 		SA.setMAX_ITER_TIME(100 * rout.length);
 		TspPlan plan = sa.solve();
 		System.out.println(plan);
-		System.out.println(plan.getRoute().length);
+		System.out.println(SA.getParam());
+		System.out.println("Path length:" + plan.getRoute().length);
+		System.out.println("Is valid solution: " + TSPUtils.isValid(plan.getRoute()));
 	}
 
 	// getter and setter

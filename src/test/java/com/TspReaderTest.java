@@ -9,7 +9,7 @@ public class TspReaderTest {
     void testRead() {
         TspProblem problem;
         try {
-            problem = TSPUtils.read("resources/eil23.txt", 23);
+            problem = TSPUtils.read("resources/eil23.txt");
             int[] x = problem.getxCoors();
             for (int i = 0; i < x.length; i++) {
                 System.out.println(x[i]);

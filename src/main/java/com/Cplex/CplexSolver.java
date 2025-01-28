@@ -36,7 +36,7 @@ public class CplexSolver implements TspSolver {
 
     public static void main(String[] args) throws IOException {
 
-        TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
+        TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt");
         TspPlan p = new CplexSolver(problem).solve();
         System.out.println("Cplex: " + p);
 

@@ -67,7 +67,7 @@ public class PSO {
 	 */
 	private void init(String filename) throws IOException {
 		// read the data
-		TspProblem problem = TSPUtils.read(filename, cityNum);
+		TspProblem problem = TSPUtils.read(filename);
 		this.distance = problem.getDist();
 
 		oPopulation = new int[scale][cityNum];

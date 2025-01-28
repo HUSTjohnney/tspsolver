@@ -132,18 +132,24 @@ public abstract class TSPUtils {
      * @return TSP问题实例
      * @throws IOException 读取文件异常
      */
-    public static TspProblem read(String filename, int numCities) throws IOException {
+    public static TspProblem read(String filename) throws IOException {
         String strbuff; // 读取文件的缓冲区
 
         BufferedReader data = new BufferedReader(new InputStreamReader(
                 new FileInputStream(filename)));
-        int[] x = new int[numCities]; // 城市x坐标
-        int[] y = new int[numCities]; // 城市y坐标
 
+        int numCities = 0;
         while ((strbuff = data.readLine()) != null) {
+            if (strbuff.startsWith("DIMENSION")) {
+                String[] temp = strbuff.split(":");
+                numCities = Integer.valueOf(temp[1].trim());
+            }
             if (!Character.isAlphabetic(strbuff.charAt(0)))
                 break;
         }
+
+        int[] x = new int[numCities]; // 城市x坐标
+        int[] y = new int[numCities]; // 城市y坐标
         String[] tmp = strbuff.split(" ");
         x[0] = Integer.valueOf(tmp[1]);
         y[0] = Integer.valueOf(tmp[2]);

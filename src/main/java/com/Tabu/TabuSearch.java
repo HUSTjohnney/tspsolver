@@ -16,6 +16,9 @@ import com.TspSolver;
  */
 public class TabuSearch implements TspSolver {
 
+    /**
+     * TSP问题类
+     */
     private final TspProblem tspProblem;
 
     /**
@@ -36,8 +39,6 @@ public class TabuSearch implements TspSolver {
     public TabuSearch(TspProblem p) {
         this.tspProblem = p;
     }
-
-
 
     /**
      * 随机打乱n次数组，每次随机交换两个元素的位置
@@ -157,7 +158,7 @@ public class TabuSearch implements TspSolver {
     }
 
     public static void main(String[] args) throws IOException {
-        TspProblem tspProblem = new TspProblem(TSPUtils.read("src\\main\\resources\\eil51.txt", 51));
+        TspProblem tspProblem = new TspProblem(TSPUtils.read("src\\main\\resources\\eil51.txt"));
         TabuSearch.setMAX_ITERATIONS(1000);
         TabuSearch.setTABU_SIZE(3000);
         TspPlan p = new TabuSearch(tspProblem).solve();

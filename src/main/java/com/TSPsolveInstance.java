@@ -1,6 +1,7 @@
 package com;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -17,10 +18,10 @@ public class TSPsolveInstance {
     public static void main(String[] args) throws IOException {
 
         // 算例的节点数量
-        int nodeNum = 25;
+        int nodeNum = 50;
 
         // 选择算法："CPLEX"/"SA"/"Greedy"/"GA"/"ACO/TS"
-        String algorithm = "TS";
+        String algorithm = "GA";
         String para = "";
 
         if (algorithm.equals("CPLEX")) {
@@ -35,8 +36,8 @@ public class TSPsolveInstance {
             para = Greedy.getParam();
         } else if (algorithm.equals("GA")) {
             GA.setCHORO_NUM(nodeNum * 10); // 种群数量
-            GA.setCROSS_RATE(0.8); // 交叉率
-            GA.setMUTATE_RATE(0.2); // 变异率
+            GA.setCROSS_RATE(0.9); // 交叉率
+            GA.setMUTATE_RATE(0.15); // 变异率
             GA.setELITE_RATE(0.20); // 精英保留率
             GA.setMAX_GEN(1000); // 最大迭代次数
             para = GA.getParam();
@@ -59,7 +60,7 @@ public class TSPsolveInstance {
         String filePath = "src\\main\\resources\\" + nodeNum + "Nodes\\";
         // 创建 FileWriter 对象，用于写入结果到文件
         BufferedWriter writer = new BufferedWriter(
-                new FileWriter("src\\main\\resources\\results\\" + algorithm + "_" + nodeNum + ".txt"));
+                new FileWriter(getAvailableFileName("src/main/resources/results/", algorithm, nodeNum)));
 
         // 获取当前日期和时间格式
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -83,7 +84,7 @@ public class TSPsolveInstance {
         // 读取并解决所有算例
         for (int i = 1; i <= 20; i++) {
             String fileName = "p" + (i < 10 ? ("0" + i) : i) + ".txt"; // 待读取的 STND 文件名称
-            TspProblem tsp = TSPUtils.read(filePath + fileName, nodeNum); // 解析 STND
+            TspProblem tsp = TSPUtils.read(filePath + fileName); // 解析 STND
             System.out.println("Solving " + fileName + "...");
 
             TspPlan plan = null;
@@ -116,7 +117,7 @@ public class TSPsolveInstance {
                 TabuSearch.setMAX_ITERATIONS(1000);
                 TabuSearch.setTABU_SIZE(3000);
                 plan = new TabuSearch(tsp).solve();
-            } 
+            }
 
             if (plan != null) {
                 System.out.printf("solved successfully, using %.2f s\n", plan.getCPUtime());
@@ -137,5 +138,27 @@ public class TSPsolveInstance {
 
         // 关闭文件写入流
         writer.close();
+    }
+
+    /**
+     * 获取可用的文件名
+     * 
+     * @param directory 文件目录
+     * @param algorithm 算法名称
+     * @param nodeNum   节点数量
+     * @return 可用的文件名
+     */
+    private static String getAvailableFileName(String directory, String algorithm, int nodeNum) {
+        String baseName = directory + algorithm + "_" + nodeNum;
+        String fileName = baseName + ".txt";
+        File file = new File(fileName);
+        int counter = 1;
+        // 检查文件是否存在，如果存在则添加编号后缀
+        while (file.exists()) {
+            fileName = baseName + "(" + counter + ")" + ".txt";
+            file = new File(fileName);
+            counter++;
+        }
+        return fileName;
     }
 }

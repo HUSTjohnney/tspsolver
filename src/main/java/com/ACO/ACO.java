@@ -129,7 +129,7 @@ public class ACO implements TspSolver {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt", 51);
+		TspProblem problem = TSPUtils.read("src\\main\\resources\\eil51.txt");
 		ACO aco = new ACO(problem);
 		ACO.setAntNum(20);
 		ACO.setMAX_GEN(100);

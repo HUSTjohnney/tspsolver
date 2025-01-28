@@ -33,7 +33,7 @@ public class GA implements TspSolver {
 	/**
 	 * 变异概率，即染色体进行变异的概率
 	 */
-	private static double MUTATE_RATE = 0.1;
+	private static double MUTATE_RATE = 0.15;
 
 	/**
 	 * 最大遗传代数
@@ -264,14 +264,15 @@ public class GA implements TspSolver {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TSPUtils.read("src/main/resources/25Nodes/p01.txt", 25);
-		TspPlan p = new GA(problem).solve();
-		System.out.println("GA: " + p);
+		TspProblem problem = TSPUtils.read("src/main/resources/25Nodes/p01.txt");
+		TspPlan plan = new GA(problem).solve();
+		System.out.println("GA: " + plan);
 
 		System.out.println("GA: " + getParam());
 
-		System.out.println("Path length:" + p.getRoute().length);
+		System.out.println("Path length:" + plan.getRoute().length);
 
+		System.out.println("Is valid solution: " + TSPUtils.isValid(plan.getRoute()));
 	}
 
 	/**

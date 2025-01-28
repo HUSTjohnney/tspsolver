@@ -1,0 +1,5 @@
+# 忽略所有 .class 文件
+*.class
+
+# 忽略 target 目录（Maven 项目默认编译输出目录）
+target/
