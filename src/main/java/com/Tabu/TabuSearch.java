@@ -11,74 +11,87 @@ import com.TspPlan;
 import com.TspProblem;
 import com.TspSolver;
 
+/**
+ * 禁忌搜索用于解决 TSP 问题
+ */
 public class TabuSearch implements TspSolver {
 
-    // 计算 TSP 的路径长度
-    public static int calculateDistance(int[][] dist, int[] solution) {
-        int distance = 0;
-        for (int i = 0; i < solution.length - 1; i++) {
-            distance += dist[solution[i]][solution[i + 1]];
-        }
-        distance += dist[solution[solution.length - 1]][solution[0]]; // 回到起点
-        return distance;
+    private final TspProblem tspProblem;
+
+    /**
+     * 禁忌搜索表的长度
+     */
+    private static int TABU_SIZE = 3000;
+
+    /**
+     * 最大迭代次数
+     */
+    private static int MAX_ITERATIONS = 1000;
+
+    /**
+     * 禁忌搜索算法的构造函数
+     * 
+     * @param p TSP问题
+     */
+    public TabuSearch(TspProblem p) {
+        this.tspProblem = p;
     }
 
-    // 生成初始解
-    public static int[] generateInitialSolution(int n) {
-        int[] solution = new int[n];
-        for (int i = 0; i < n; i++) {
-            solution[i] = i;
-        }
-        shuffle(solution);
-        return solution;
-    }
 
-    // 交换数组中两个元素的位置
-    public static void swap(int[] array, int i, int j) {
-        int temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
 
-    // 随机打乱数组
+    /**
+     * 随机打乱n次数组，每次随机交换两个元素的位置
+     * 
+     * @param array 数组
+     */
     public static void shuffle(int[] array) {
         Random random = new Random();
         for (int i = 0; i < array.length; i++) {
             int index = random.nextInt(array.length);
-            swap(array, i, index);
+            TSPUtils.swap(array, i, index);
         }
     }
 
-    // 生成邻域解
+    /**
+     * 生成领域解
+     * 
+     * @param solution 当前解
+     * @return 领域解列表
+     */
     public static List<int[]> generateNeighbors(int[] solution) {
         List<int[]> neighbors = new ArrayList<>();
         for (int i = 0; i < solution.length; i++) {
             for (int j = i + 1; j < solution.length; j++) {
                 int[] neighbor = solution.clone();
-                swap(neighbor, i, j);
+                TSPUtils.swap(neighbor, i, j);
                 neighbors.add(neighbor);
             }
         }
         return neighbors;
     }
 
-    // 禁忌搜索算法
-    public static int[] tabuSearch(TspProblem tspProblem, int tabuSize, int maxIterations) {
-        int n = tspProblem.getDist().length;
-        int[] bestSolution = generateInitialSolution(n);
-        int bestDistance = calculateDistance(tspProblem.getDist(), bestSolution);
+    /**
+     * 禁忌搜索算法
+     * 
+     * @return TSP方案
+     */
+    public TspPlan solve() {
+        long startTime = System.currentTimeMillis();
+        int n = tspProblem.getCityNum();
+        int[] bestSolution = TSPUtils.getRandomRoute(n);
+        int bestDistance = TSPUtils.cost(bestSolution, tspProblem.getDist());
         int[] currentSolution = bestSolution.clone();
-        int[] tabuList = new int[tabuSize];
+        int[] tabuList = new int[TABU_SIZE];
         Arrays.fill(tabuList, -1);
         int tabuIndex = 0;
 
-        for (int iteration = 0; iteration < maxIterations; iteration++) {
+        for (int iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
             List<int[]> neighbors = generateNeighbors(currentSolution);
             int[] bestNeighbor = null;
             int bestNeighborDistance = Integer.MAX_VALUE;
 
             for (int[] neighbor : neighbors) {
-                int neighborDistance = calculateDistance(tspProblem.getDist(), neighbor);
+                int neighborDistance = TSPUtils.cost(neighbor, tspProblem.getDist());
                 int swapHash = hashSwap(currentSolution, neighbor);
                 if (neighborDistance < bestNeighborDistance && !isTabu(tabuList, swapHash)) {
                     bestNeighbor = neighbor;
@@ -90,14 +103,15 @@ public class TabuSearch implements TspSolver {
                 currentSolution = bestNeighbor;
                 int swapHash = hashSwap(currentSolution, bestNeighbor);
                 tabuList[tabuIndex] = swapHash;
-                tabuIndex = (tabuIndex + 1) % tabuSize;
+                tabuIndex = (tabuIndex + 1) % TABU_SIZE;
                 if (bestNeighborDistance < bestDistance) {
                     bestSolution = bestNeighbor;
                     bestDistance = bestNeighborDistance;
                 }
             }
         }
-        return bestSolution;
+        long endTime = System.currentTimeMillis();
+        return new TspPlan(bestSolution, bestDistance, (endTime - startTime) / 1000.0);
     }
 
     // 检查交换是否在禁忌表中
@@ -125,24 +139,33 @@ public class TabuSearch implements TspSolver {
         return -1;
     }
 
-    @Override
-    public TspPlan solve() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'solve'");
+    // getter and setter
+    public static void setTABU_SIZE(int tABU_SIZE) {
+        TABU_SIZE = tABU_SIZE;
+    }
+
+    public static void setMAX_ITERATIONS(int mAX_ITERATIONS) {
+        MAX_ITERATIONS = mAX_ITERATIONS;
+    }
+
+    public static int getTABU_SIZE() {
+        return TABU_SIZE;
+    }
+
+    public static int getMAX_ITERATIONS() {
+        return MAX_ITERATIONS;
     }
 
     public static void main(String[] args) throws IOException {
         TspProblem tspProblem = new TspProblem(TSPUtils.read("src\\main\\resources\\eil51.txt", 51));
-        int tabuSize = 3000;
-        int maxIterations = 1000;
-        int[] bestSolution = tabuSearch(tspProblem, tabuSize, maxIterations);
-        System.out.println("Best solution: " + Arrays.toString(bestSolution));
-        System.out.println("Best distance: " + calculateDistance(tspProblem.getDist(), bestSolution));
+        TabuSearch.setMAX_ITERATIONS(1000);
+        TabuSearch.setTABU_SIZE(3000);
+        TspPlan p = new TabuSearch(tspProblem).solve();
+        System.out.println("Best solution: " + p);
     }
 
     public static String getParam() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getParam'");
+        return "TABU_SIZE:" + TABU_SIZE + ", MAX_ITERATIONS:" + MAX_ITERATIONS;
     }
 
 }

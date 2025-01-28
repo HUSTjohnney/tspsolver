@@ -13,18 +13,27 @@ import java.util.Set;
  * TSP工具类，提供一些TSP问题的工具方法，无法实例成对象。
  */
 public abstract class TSPUtils {
+
     /**
      * 判断路径是否合法，是否有重复的城市
      * 
      * @return True 如果路径合法，否则返回False
      */
     public static boolean isValid(final int[] rout) {
+        int minCityIndex = Integer.MAX_VALUE;
+        int maxCityIndex = Integer.MIN_VALUE;
         Set<Integer> set = new HashSet<>();
         for (int i = 0; i < rout.length; i++) {
             if (set.contains(rout[i])) {
                 return false;
             }
+            minCityIndex = Math.min(minCityIndex, rout[i]);
+            maxCityIndex = Math.max(maxCityIndex, rout[i]);
             set.add(rout[i]);
+        }
+        // 起点和终点是否正确
+        if (minCityIndex != 0 || maxCityIndex != rout.length - 1) {
+            return false;
         }
         return true;
     }
@@ -60,9 +69,7 @@ public abstract class TSPUtils {
         }
 
         int[] newRoute = Arrays.copyOf(route, route.length);
-        int temp = newRoute[r1];
-        newRoute[r1] = newRoute[r2];
-        newRoute[r2] = temp;
+        swap(newRoute, r1, r2);
 
         return newRoute;
     }
@@ -74,26 +81,36 @@ public abstract class TSPUtils {
      * @param index 位置
      * @return 交换后的路径
      */
-    public static void swap(final int[] route, final int index) {
+    public static void swap(int[] route, final int index) {
         Random random = new Random();
         int rand = random.nextInt(route.length);
 
         while (index == rand) {
             rand = random.nextInt(route.length);
         }
-
-        int temp = route[index];
-        route[index] = route[rand];
-        route[rand] = temp;
+        swap(route, index, rand);
     }
 
     /**
-     * 生成随机路径
+     * 交换数组中两个元素的位置
+     * 
+     * @param array 数组
+     * @param i     位置i
+     * @param j     位置j
+     */
+    public static void swap(int[] array, int i, int j) {
+        int temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+
+    /**
+     * 生成随机路径，先按次序生成，然后打乱N次
      * 
      * @param cityNum 城市数量
      * @return 随机路径
      */
-    public static int[] findRandomRoute(int cityNum) {
+    public static int[] getRandomRoute(int cityNum) {
         int[] route = new int[cityNum];
         for (int i = 0; i < cityNum; i++) {
             route[i] = i;
@@ -117,7 +134,7 @@ public abstract class TSPUtils {
      */
     public static TspProblem read(String filename, int numCities) throws IOException {
         String strbuff; // 读取文件的缓冲区
-        
+
         BufferedReader data = new BufferedReader(new InputStreamReader(
                 new FileInputStream(filename)));
         int[] x = new int[numCities]; // 城市x坐标

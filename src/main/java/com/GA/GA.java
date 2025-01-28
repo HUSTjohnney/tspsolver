@@ -56,7 +56,7 @@ public class GA implements TspSolver {
 
 		// 初始化种群
 		for (int i = 0; i < CHORO_NUM; i++) {
-			chromosomes[i] = TSPUtils.findRandomRoute(problem.getCityNum());
+			chromosomes[i] = TSPUtils.getRandomRoute(problem.getCityNum());
 		}
 	}
 
