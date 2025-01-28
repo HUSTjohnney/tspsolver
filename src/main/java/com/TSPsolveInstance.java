@@ -18,10 +18,10 @@ public class TSPsolveInstance {
     public static void main(String[] args) throws IOException {
 
         // 算例的节点数量
-        int nodeNum = 50;
+        int nodeNum = 25;
 
         // 选择算法："CPLEX"/"SA"/"Greedy"/"GA"/"ACO/TS"
-        String algorithm = "GA";
+        String algorithm = "TS";
         String para = "";
 
         if (algorithm.equals("CPLEX")) {
@@ -49,8 +49,8 @@ public class TSPsolveInstance {
             ACO.setMAX_GEN(100);
             para = ACO.getParam();
         } else if (algorithm.equals("TS")) {
-            TabuSearch.setMAX_ITERATIONS(1000);
-            TabuSearch.setTABU_SIZE(3000);
+            TabuSearch.setMAX_ITERATIONS(20000);
+            TabuSearch.setTABU_SIZE(5000);
             para = TabuSearch.getParam();
         } else {
             System.out.println("Invalid algorithm name!");

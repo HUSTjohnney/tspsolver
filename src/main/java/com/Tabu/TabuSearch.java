@@ -140,6 +140,14 @@ public class TabuSearch implements TspSolver {
         return -1;
     }
 
+    public static void main(String[] args) throws IOException {
+        TspProblem tspProblem = new TspProblem(TSPUtils.read("src\\main\\resources\\eil51.txt"));
+        TabuSearch.setMAX_ITERATIONS(1000);
+        TabuSearch.setTABU_SIZE(3000);
+        TspPlan p = new TabuSearch(tspProblem).solve();
+        System.out.println("Best solution: " + p);
+    }
+
     // getter and setter
     public static void setTABU_SIZE(int tABU_SIZE) {
         TABU_SIZE = tABU_SIZE;
@@ -155,14 +163,6 @@ public class TabuSearch implements TspSolver {
 
     public static int getMAX_ITERATIONS() {
         return MAX_ITERATIONS;
-    }
-
-    public static void main(String[] args) throws IOException {
-        TspProblem tspProblem = new TspProblem(TSPUtils.read("src\\main\\resources\\eil51.txt"));
-        TabuSearch.setMAX_ITERATIONS(1000);
-        TabuSearch.setTABU_SIZE(3000);
-        TspPlan p = new TabuSearch(tspProblem).solve();
-        System.out.println("Best solution: " + p);
     }
 
     public static String getParam() {
