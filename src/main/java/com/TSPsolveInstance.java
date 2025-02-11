@@ -9,6 +9,7 @@ import java.util.Date;
 
 import com.Cplex.CplexSolver;
 import com.aco.ACO;
+import com.alns.ALNS;
 import com.ga.GA;
 import com.greedy.Greedy;
 import com.sa.SA;
@@ -20,8 +21,8 @@ public class TSPsolveInstance {
         // 算例的节点数量
         int nodeNum = 25;
 
-        // 选择算法："CPLEX"/"SA"/"Greedy"/"GA"/"ACO/TS"
-        String algorithm = "TS";
+        // 选择算法："CPLEX"/"SA"/"Greedy"/"GA"/"ACO/TS/ALNS"
+        String algorithm = "SA";
         String para = "";
 
         if (algorithm.equals("CPLEX")) {
@@ -52,15 +53,17 @@ public class TSPsolveInstance {
             TabuSearch.setMAX_ITERATIONS(20000);
             TabuSearch.setTABU_SIZE(5000);
             para = TabuSearch.getParam();
+        } else if (algorithm.equals("ALNS")) {
+            para = "ALNS";
         } else {
             System.out.println("Invalid algorithm name!");
             return;
         }
 
-        String filePath = "src\\main\\resources\\" + nodeNum + "Nodes\\";
+        String filePath = "src\\main\\resources\\tsp\\" + nodeNum + "Nodes\\";
         // 创建 FileWriter 对象，用于写入结果到文件
         BufferedWriter writer = new BufferedWriter(
-                new FileWriter(getAvailableFileName("src/main/resources/results/", algorithm, nodeNum)));
+                new FileWriter(getAvailableFileName("src/main/resources/tsp/results/", algorithm, nodeNum)));
 
         // 获取当前日期和时间格式
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -117,6 +120,8 @@ public class TSPsolveInstance {
                 TabuSearch.setMAX_ITERATIONS(1000);
                 TabuSearch.setTABU_SIZE(3000);
                 plan = new TabuSearch(tsp).solve();
+            } else if (algorithm.equals("ALNS")) {
+                plan = new ALNS(tsp).solve();
             }
 
             if (plan != null) {

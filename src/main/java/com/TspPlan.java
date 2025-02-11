@@ -58,4 +58,8 @@ public class TspPlan {
         return usedMemory / (1024.0 * 1024.0); // 将字节转换为 MB
     }
 
+    public TspPlan copy() {
+        return new TspPlan(Arrays.copyOf(route, route.length), cost, CPUtime);
+    }
+
 }

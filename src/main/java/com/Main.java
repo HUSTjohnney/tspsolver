@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.Stack;
 
 // 注意类名必须为 Main, 不要有任何 package xxx 信息
 public class Main {
@@ -24,6 +25,29 @@ public class Main {
         }
 
         System.out.println(5);
+    }
+
+    // 给出由小写字母组成的字符串 s，重复项删除操作会选择两个相邻且相同的字母，并删除它们。
+    // 在 s 上反复执行重复项删除操作，直到无法继续删除。在完成所有重复项删除操作后返回最终的字符串。答案保证唯一。
+    // 输入："abbaca"输出："ca"
+
+    public String delete(String input) {
+        // 1. 用栈来存储字符，如果栈顶元素和当前元素相同，则弹出栈顶元素。
+        // 2. 最后将栈中的元素转换成字符串。
+        char[] array = input.toCharArray();
+        Stack<Character> stack = new Stack<>();
+        for (char c : array) {
+            if (stack.isEmpty() || stack.peek() != c) {
+                stack.push(c);
+            } else {
+                stack.pop();
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        for (char c : stack) {
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     public int[][] generateMatrix(int n) {
@@ -78,7 +102,7 @@ public class Main {
         }
         return ans;
     }
-    
+
     public List<Integer> partitionLabels(String s) {
         // 最开始分配成1个区间
         // 遍历一遍，记录字母的最后出现时刻和最早出现时刻？
@@ -96,16 +120,16 @@ public class Main {
         return null;
 
     }
-    
+
     public int jump(int[] nums) {
         // 动态规划 f[当前位置] = 到当前位置所需的最小步数
         // f[0] = 0 初始位置，无需跳跃
         // f[1] = 1 if(f[0]+nums[0]>=1)
         // f[2] = min(f[0]+nums[0]>=2,f[1]+nums[1])
         // f[3] = min(f[0]+nums[0],)
-        
+
         int[] f = new int[nums.length];
-        for(int i = 0;i<nums.length;i++){
+        for (int i = 0; i < nums.length; i++) {
             f[i] = Integer.MAX_VALUE;
         }
         f[0] = 0;
