@@ -44,9 +44,9 @@ public class TspPlan {
 
     public static String print(int rout[]) {
         StringBuilder sb = new StringBuilder();
-        sb.append(rout[0]);
+        sb.append(rout[0] + 1);
         for (int i = 1; i < rout.length; i++) {
-            sb.append("->").append(rout[i]);
+            sb.append("->").append(rout[i] + 1);
         }
         return sb.toString();
     }

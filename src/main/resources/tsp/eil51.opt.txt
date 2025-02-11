@@ -1,5 +1,7 @@
 NAME : eil51.opt.tour
-COMMENT : Optimal tour for eil51.tsp  (426)
+COMMENT : Optimal tour for eil51.tsp  (426)（SA 424）
+Cplex: TspPlan [Route=1->32->11->38->5->49->10->39->33->45->15->37->17->44->42->19->40->41->13->25->14->18->4->47->12->46->51->27->6->48->23->24->43->7->26->8->31->28->3->36->35->20->29->21->34->30->9->50->16->2->22->1, cost=412, CPUtime=4.798]
+
 TYPE : TOUR
 DIMENSION : 51
 TOUR_SECTION

@@ -123,7 +123,8 @@ public class SA implements TspSolver {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TspProblem problem = TSPUtils.read("src\\main\\resources\\25Nodes\\p01.txt");
+		TspProblem problem = TSPUtils.read("src\\main\\resources\\tsp\\25Nodes\\p01.txt");
+		//TspProblem problem = TSPUtils.read("src\\main\\resources\\tsp\\eil51.txt");
 		SA sa = new SA(problem);
 		int[] rout = sa.getInitRoute();
 		SA.setINIT_TEMP(1e6);
