@@ -4,6 +4,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.Arrays;
+import java.util.List;
 
 public class TspPlan {
 
@@ -22,6 +23,12 @@ public class TspPlan {
         this.route = plan;
         this.cost = cost;
         this.CPUtime = CPUtime;
+    }
+
+    public TspPlan(List<Integer> bestPath, double bestDistance, double cPUtime2) {
+        this.route = bestPath.stream().mapToInt(i -> i).toArray();
+        this.cost = (int) bestDistance;
+        this.CPUtime = cPUtime2;
     }
 
     // getter and setter

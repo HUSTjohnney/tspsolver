@@ -13,32 +13,32 @@ import com.alns.ALNS;
 import com.ga.GA;
 import com.greedy.Greedy;
 import com.sa.SA;
-import com.tabu.TabuSearch;
+import com.tabu.TS;
 
 public class TSPsolveInstance {
     public static void main(String[] args) throws IOException {
 
         // 算例的节点数量
-        int nodeNum = 25;
+        int nodeNum = 50;
 
         // 选择算法："CPLEX"/"SA"/"Greedy"/"GA"/"ACO/TS/ALNS"
-        String algorithm = "SA";
+        String algorithm = "TS";
         String para = "";
 
         if (algorithm.equals("CPLEX")) {
             para = CplexSolver.getParam();
         } else if (algorithm.equals("SA")) {
-            SA.setINIT_TEMP(1e6);
+            SA.setINIT_TEMP(1e5 * nodeNum);
             SA.setDECRESE_RATE(0.995);
-            SA.setTEMP_LB(1e-6);
+            SA.setTEMP_LB(1e-7);
             SA.setMAX_ITER_TIME(50 * nodeNum);
             para = SA.getParam();
         } else if (algorithm.equals("Greedy")) {
             para = Greedy.getParam();
         } else if (algorithm.equals("GA")) {
-            GA.setCHORO_NUM(nodeNum * 10); // 种群数量
+            GA.setCHORO_NUM(nodeNum * 30); // 种群数量
             GA.setCROSS_RATE(0.9); // 交叉率
-            GA.setMUTATE_RATE(0.15); // 变异率
+            GA.setMUTATE_RATE(0.1); // 变异率
             GA.setELITE_RATE(0.20); // 精英保留率
             GA.setMAX_GEN(1000); // 最大迭代次数
             para = GA.getParam();
@@ -50,9 +50,9 @@ public class TSPsolveInstance {
             ACO.setMAX_GEN(100);
             para = ACO.getParam();
         } else if (algorithm.equals("TS")) {
-            TabuSearch.setMAX_ITERATIONS(20000);
-            TabuSearch.setTABU_SIZE(5000);
-            para = TabuSearch.getParam();
+            TS.setMAX_ITER(1000);
+            TS.setTABU_TENURE(500);
+            para = TS.getParam();
         } else if (algorithm.equals("ALNS")) {
             para = "ALNS";
         } else {
@@ -88,38 +88,22 @@ public class TSPsolveInstance {
         for (int i = 1; i <= 20; i++) {
             String fileName = "p" + (i < 10 ? ("0" + i) : i) + ".txt"; // 待读取的 STND 文件名称
             TspProblem tsp = TSPUtils.read(filePath + fileName); // 解析 STND
-            System.out.println("Solving " + fileName + "...");
+            System.out.println("Solving " + fileName + "... by " + algorithm + " algorithm");
 
             TspPlan plan = null;
 
             if (algorithm.equals("CPLEX")) {
                 plan = new CplexSolver(tsp).solve();
             } else if (algorithm.equals("SA")) {
-                SA.setINIT_TEMP(1e5 * nodeNum);
-                SA.setDECRESE_RATE(0.995);
-                SA.setTEMP_LB(1e-6);
-                SA.setMAX_ITER_TIME(50 * nodeNum);
                 plan = new SA(tsp).solve();
             } else if (algorithm.equals("Greedy")) {
                 plan = new Greedy(tsp).solve();
             } else if (algorithm.equals("GA")) {
-                GA.setCHORO_NUM(nodeNum * 10); // 种群数量
-                GA.setCROSS_RATE(0.9); // 交叉率
-                GA.setMUTATE_RATE(0.1); // 变异率
-                GA.setELITE_RATE(0.20); // 精英保留率
-                GA.setMAX_GEN(1000); // 最大迭代次数
                 plan = new GA(tsp).solve();
             } else if (algorithm.equals("ACO")) {
-                ACO.setALPHA(1.f);
-                ACO.setBETA(5.f);
-                ACO.setRHO(0.5f);
-                ACO.setAntNum(nodeNum / 2);
-                ACO.setMAX_GEN(100);
                 plan = new ACO(tsp).solve();
             } else if (algorithm.equals("TS")) {
-                TabuSearch.setMAX_ITERATIONS(1000);
-                TabuSearch.setTABU_SIZE(3000);
-                plan = new TabuSearch(tsp).solve();
+                plan = new TS(tsp).solve();
             } else if (algorithm.equals("ALNS")) {
                 plan = new ALNS(tsp).solve();
             }
