@@ -1,5 +1,14 @@
 package com.alns;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -8,6 +17,7 @@ import com.TSPUtils;
 import com.TspPlan;
 import com.TspProblem;
 import com.TspSolver;
+import com.sa.SA;
 
 /*  自适应大领域搜索求解TSP
 **  Create by: WSKH
@@ -15,27 +25,23 @@ import com.TspSolver;
     Time:21:21
 */
 public class ALNS implements TspSolver {
-    // 城市坐标<[x,y]>
-    List<double[]> locationList;
-    // 距离矩阵
-    public double[][] dist;
     // 城市数量
     int cityNum;
-    public final int MAX_GEN = 100000;// 最大的迭代次数(提高这个值可以稳定地提高解质量，但是会增加求解时间)
-    public int[] tempGh;// 存放临时编码
-    public int[] currGh;// 存放当前编码
-    public int[] bestGh;// 最好的路径编码
-    public int bestT;// 最佳的迭代次数
-    public double tempEvaluation;// 临时解
-    public double currEvaluation;// 当前解
-    public double bestEvaluation;// 最优解
+    public final int MAX_GEN = 100000; // 10w 最大的迭代次数(提高这个值可以稳定地提高解质量，但是会增加求解时间)
+    public int[] tempRoute; // 存放临时编码
+    public int[] currRoute; // 存放当前编码
+    public int[] bestRoute; // 最好的路径编码
+    public int bestT; // 最佳的迭代次数
+    public double tempEvaluation; // 临时解
+    public double currEvaluation; // 当前解
+    public double bestEvaluation; // 最优解
 
-    public int t;// 当前迭代次数
-    public Random random;// 随机函数对象
+    public int t; // 当前迭代次数
+
+    public Random random; // 随机函数对象
     public double T = 100; // 模拟退火温度
     public double a = 0.9; // 降温速度
     public double ro = 0.6; // 权重更新系数，控制权重变化速度
-
     public double[] weights; // 权重数组
     public double[] rates; // 累加的概率数组
     public int[] countArray; // 算子使用次数
@@ -44,11 +50,10 @@ public class ALNS implements TspSolver {
     public int breakIndex = -1; // 破坏算子索引
 
     public int N = 100; // 领域搜索次数限制
+
     public int[][] tabuList; // 禁忌表
     public int tabuListLen = 20; // 禁忌长度
     public int currTabuLen = 0; // 当前禁忌表长度
-
-    private TspProblem tspProblem;
 
     // 如果临时解优于最优解时的得分
     public double score1 = 1.5;
@@ -59,71 +64,98 @@ public class ALNS implements TspSolver {
     // 如果以上都没有满足时的得分
     public double score4 = 0.1;
 
-    public TspPlan plan;
+    private TspProblem problem;
+    private List<int[]> locationList;
 
-    public static void main(String[] args) throws IOException {
-        TspProblem tspProblem = TSPUtils.read("src\\main\\resources\\tsp\\25Nodes\\p01.txt");
-        ALNS alns_tsp = new ALNS(tspProblem);
-        TspPlan plan = alns_tsp.solve();
-
-        System.out.println(plan);
-
-        System.out.println("Path length:" + plan.getRoute().length);
-
-        System.out.println("Is valid solution: " + TSPUtils.isValid(plan.getRoute()));
-
-        int[] route = new int[25];
-        for (int i = 0; i < 25; i++) {
-            route[i] = plan.getRoute()[i];
-        }
-        TspPlan plan2 = new TspPlan(route, TSPUtils.cost(route, tspProblem.getDist()), plan.getCPUtime());
-
-        System.out.println("TspProblem.getDist():" + Arrays.toString(tspProblem.getDist()[0]));
-
-        System.out.println("dist:" + Arrays.toString(alns_tsp.dist[0]));
-
-        System.out.println(plan2);
-
-        System.out.println("Path length:" + plan2.getRoute().length);
-
-        System.out.println("Is valid solution: " + TSPUtils.isValid(plan.getRoute()));
-    }
+    // 记录每轮迭代的最优解
+    private List<Double> iterationBestEvaluations = new ArrayList<>();
 
     public ALNS(TspProblem tspProblem) {
         this.locationList = new ArrayList<>();
         for (int i = 0; i < tspProblem.getCityNum(); i++) {
-            double[] location = { tspProblem.getxCoors()[i], tspProblem.getyCoors()[i] };
+            int[] location = new int[2];
+            location[0] = tspProblem.getxCoors()[i];
+            location[1] = tspProblem.getyCoors()[i];
             locationList.add(location);
         }
-        this.tspProblem = tspProblem;
+        this.problem = tspProblem;
     }
 
-    public ALNS(List<double[]> locationList) {
-        this.locationList = locationList;
+    public static void main(String[] args) throws IOException {
+        TspProblem tspProblem = TSPUtils.read("src\\main\\resources\\tsp\\50Nodes\\p01.txt");
+        ALNS alns_tsp = new ALNS(tspProblem);
+
+        TspPlan p = alns_tsp.solve();
+
+        System.out.println("ALNS: " + p);
+
+        System.out.println("最佳路径为：" + TspPlan.print(p.getRoute()));
+
+        System.out.println("最佳路径长度为：" + p.getCost());
+
+        // 绘制收敛曲线
+        XYSeries series = new XYSeries("ALNS_TSP");
+        for (int i = 0; i < alns_tsp.iterationBestEvaluations.size(); i++) {
+            series.add(i, alns_tsp.iterationBestEvaluations.get(i));
+        }
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        dataset.addSeries(series);
+
+        JFreeChart chart = ChartFactory.createXYLineChart(
+                "ALNS_TSP",
+                "iteration times",
+                "best evaluation",
+                dataset);
+
+        XYPlot plot = chart.getXYPlot();
+        ValueAxis domainAxis = plot.getDomainAxis();
+        domainAxis.setRange(0, alns_tsp.iterationBestEvaluations.size()); // 设置 X 轴范围
+
+        ValueAxis rangeAxis = plot.getRangeAxis();
+        double minValue = Collections.min(alns_tsp.iterationBestEvaluations);
+        double maxValue = Collections.max(alns_tsp.iterationBestEvaluations);
+        rangeAxis.setRange(minValue - 1, maxValue + 1); // 设置 Y 轴范围
+
+        ChartFrame frame = new ChartFrame("ALNS_TSP", chart);
+        frame.pack();
+        frame.setVisible(true);
     }
 
     public TspPlan solve() {
+        long startTime = System.currentTimeMillis();
         initVar();
         solver();
-        return this.plan;
+        long endTime = System.currentTimeMillis();
+        double duration = (endTime - startTime) / 1000.0;
+        return new TspPlan(bestRoute, (int) bestEvaluation, duration);
     }
 
     public void solver() {
-        long startTime = System.currentTimeMillis();
         while (t <= MAX_GEN) {
             int n = 0;
             while (n <= N) {
-                // 根据权重概率随机破坏，贪婪插入
-                // tempGh = randomBreakAndRepair(currGh.clone());
+                // if (t % 1000 == 0) {
+                // System.out.println("第" + t + "次迭代，第" + n + "次领域搜索，最优路径长度为：" +
+                // bestEvaluation);
+                // }
+                // 记录每轮迭代的最优解
+                this.iterationBestEvaluations.add(bestEvaluation);
+
                 // 根据权重概率随机破坏和修复算子
-                tempGh = randomBreakAndRepair2(currGh.clone());
-                if (!isInTabuList(tempGh)) {
+                if (t <= MAX_GEN * 0.25 && t % 2 == 0) {
+                    tempRoute = randomBreakAndRandomRepair(currRoute.clone());
+                } else {
+                    tempRoute = randomBreakAndGreedyRepair(currRoute.clone());
+                }
+                // tempRoute = randomBreakAndRandomRepair(currRoute.clone());
+                // tempRoute = randomBreakAndGreedyRepair(currRoute.clone());
+                if (!isInTabuList(tempRoute)) {
                     t++;
-                    tempEvaluation = evaluate(tempGh);
+                    tempEvaluation = evaluate(tempRoute);
                     if (tempEvaluation < bestEvaluation) {
                         // 如果临时解优于最优解
                         bestEvaluation = tempEvaluation;
-                        bestGh = tempGh.clone();
+                        bestRoute = tempRoute.clone();
                         // 加分
                         score[breakIndex] += score1;
                         score[repairIndex] += score1;
@@ -132,7 +164,7 @@ public class ALNS implements TspSolver {
                     } else if (tempEvaluation < currEvaluation) {
                         // 如果临时解优于当前解
                         currEvaluation = tempEvaluation;
-                        currGh = tempGh.clone();
+                        currRoute = tempRoute.clone();
                         // 加分
                         score[breakIndex] += score2;
                         score[repairIndex] += score2;
@@ -142,7 +174,7 @@ public class ALNS implements TspSolver {
                         if (r <= Math.exp(-1 * (Math.abs(tempEvaluation - currEvaluation) / T))) {
                             // 如果满足模拟退火算法Metropolis准则，那么临时解替换当前解
                             currEvaluation = tempEvaluation;
-                            currGh = tempGh.clone();
+                            currRoute = tempRoute.clone();
                             // 加分
                             score[breakIndex] += score3;
                             score[repairIndex] += score3;
@@ -157,29 +189,35 @@ public class ALNS implements TspSolver {
                     // 如果在禁忌表中，则此次搜索不算
                     n++;
                 }
+
                 // 加入禁忌表
-                enterTabuList(tempGh.clone());
+                enterTabuList(tempRoute.clone());
                 // 更新概率
                 rates = updateRates();
                 // 降温
                 T = T * (1.0 - a);
             }
         }
-        long endTime = System.currentTimeMillis();
         System.out.println("最佳迭代次数:" + bestT);
-        System.out.println("最短路程为：" + bestEvaluation);
-        int[] bestPath = new int[cityNum];
-        System.arraycopy(bestGh, 0, bestPath, 0, bestGh.length);
-        System.out.println("最佳路径为：" + Arrays.toString(bestPath));
-        System.out.println("costFunc：" + TSPUtils.cost(bestPath, tspProblem.getDist()));
-        plan = new TspPlan(bestPath, (int) bestEvaluation, (endTime - startTime) / 1000.0);
+        // System.out.println("最短路程为：" + bestEvaluation);
+        int[] bestPath = new int[cityNum + 1];
+        System.arraycopy(bestRoute, 0, bestPath, 0, bestRoute.length);
+        bestPath[cityNum] = bestPath[0];
+        // System.out.println("最佳路径为：" + Arrays.toString(bestPath));
+
+        int[] newpath = new int[cityNum];
+        for (int i = 0; i < bestRoute.length; i++) {
+            newpath[i] = bestRoute[i];
+        }
+        // System.out.println("新的路径为：" + Arrays.toString(newpath));
+        // System.out.println(TSPUtils.cost(newpath, problem.getDist()));
     }
 
     // 插入禁忌表
-    public void enterTabuList(int[] tempGh) {
+    public void enterTabuList(int[] tempRoute) {
         if (currTabuLen < tabuListLen) {
             // 如果当前禁忌表还有空位，则直接加入即可
-            tabuList[currTabuLen] = tempGh.clone();
+            tabuList[currTabuLen] = tempRoute.clone();
             currTabuLen++;
         } else {
             // 如果禁忌表已经满了，则移除第一个进表的路径，添加新的路径到禁忌表末尾
@@ -188,7 +226,7 @@ public class ALNS implements TspSolver {
                 tabuList[i] = tabuList[i + 1].clone();
             }
             // 将tempGh加入到禁忌队列的最后
-            tabuList[tabuList.length - 1] = tempGh.clone();
+            tabuList[tabuList.length - 1] = tempRoute.clone();
         }
     }
 
@@ -207,7 +245,7 @@ public class ALNS implements TspSolver {
     }
 
     // 根据权重概率随机破坏和修复算子
-    public int[] randomBreakAndRepair2(int[] currGh) {
+    public int[] randomBreakAndRandomRepair(int[] currRoute) {
         double r = random.nextDouble();
         // 破坏算子
         breakIndex = -1;
@@ -228,16 +266,16 @@ public class ALNS implements TspSolver {
         }
         if (repairIndex == breakIndex) {
             countArray[repairIndex] += 1;
-            return currGh.clone();
+            return currRoute.clone();
         }
         countArray[repairIndex] += 1;
         countArray[breakIndex] += 1;
         // 破坏并修复
-        int breakValue = currGh[breakIndex];
+        int breakValue = currRoute[breakIndex];
         LinkedBlockingDeque<Integer> linkedBlockingDeque = new LinkedBlockingDeque<>(cityNum); // 存没被破坏的算子
         for (int i = 0; i < cityNum; i++) {
             if (i != breakIndex) {
-                linkedBlockingDeque.add(currGh[i]);
+                linkedBlockingDeque.add(currRoute[i]);
             }
         }
         int[] Gh = new int[cityNum];
@@ -252,62 +290,80 @@ public class ALNS implements TspSolver {
     }
 
     // 根据权重概率随机破坏，贪婪插入
-    public int[] randomBreakAndRepair(int[] currGh) {
+    public int[] randomBreakAndGreedyRepair(int[] currRoute) {
         double r = random.nextDouble();
         // 破坏算子
         breakIndex = -1;
         for (int i = 1; i < rates.length; i++) {
-            if (r > rates[i - 1] && r <= rates[i]) {
+            if (i == rates.length - 1 || r > rates[i - 1] && r <= rates[i]) {
                 breakIndex = i;
                 break;
             }
         }
-        // 贪婪寻找修复算子
-        double min = Double.MAX_VALUE;
-        for (int i = 1; i < cityNum; i++) {
-            if (i != cityNum - 1) {
-                double d1 = getDistance(locationList.get(i - 1), locationList.get(i));
-                double d2 = getDistance(locationList.get(i), locationList.get(i + 1));
-                if (d1 + d2 < min) {
-                    min = d1 + d2;
-                    repairIndex = i;
-                }
-            } else {
-                double d1 = getDistance(locationList.get(i - 1), locationList.get(i));
-                double d2 = getDistance(locationList.get(i), locationList.get(0));
-                if (d1 + d2 < min) {
-                    min = d1 + d2;
-                    repairIndex = i;
+
+        // 贪婪寻找修复位置
+        int breakValue = currRoute[breakIndex];
+        int bestInsertIndex = -1;
+        double minDistance = Double.MAX_VALUE;
+
+        // 尝试将破坏的城市插入到每个可能的位置
+        for (int insertIndex = 0; insertIndex < cityNum; insertIndex++) {
+            if (insertIndex == breakIndex) {
+                continue;
+            }
+            int[] newRoute = new int[cityNum];
+            int index = 0;
+            for (int i = 0; i < cityNum; i++) {
+                if (i != breakIndex) {
+                    newRoute[index++] = currRoute[i];
                 }
             }
+            // 插入被破坏的城市
+            System.arraycopy(newRoute, insertIndex, newRoute, insertIndex + 1, cityNum - insertIndex - 1);
+            newRoute[insertIndex] = breakValue;
+
+            // 计算新路径的总距离
+            double newDistance = evaluate(newRoute);
+            if (newDistance < minDistance) {
+                minDistance = newDistance;
+                bestInsertIndex = insertIndex;
+            }
         }
+
+        repairIndex = bestInsertIndex;
+
         if (repairIndex == breakIndex) {
             countArray[repairIndex] += 1;
-            return currGh;
+            return currRoute.clone();
         }
         countArray[repairIndex] += 1;
         countArray[breakIndex] += 1;
+
         // 破坏并修复
-        int breakValue = currGh[breakIndex];
-        LinkedBlockingDeque<Integer> linkedBlockingDeque = new LinkedBlockingDeque<>(cityNum); // 存没被破坏的算子
+        LinkedBlockingDeque<Integer> unbrokenCities = new LinkedBlockingDeque<>(cityNum);
         for (int i = 0; i < cityNum; i++) {
             if (i != breakIndex) {
-                linkedBlockingDeque.add(currGh[i]);
+                unbrokenCities.add(currRoute[i]);
             }
         }
-        int[] Gh = new int[cityNum];
+        int[] newRoute = new int[cityNum];
         for (int i = 0; i < cityNum; i++) {
-            if (i != repairIndex && !linkedBlockingDeque.isEmpty()) {
-                Gh[i] = linkedBlockingDeque.poll();
-            } else {
-                Gh[i] = breakValue;
+            if (i != repairIndex && !unbrokenCities.isEmpty()) {
+                newRoute[i] = unbrokenCities.poll();
+            } else if (i == repairIndex) {
+                newRoute[i] = breakValue;
             }
         }
-        return Gh.clone();
+        return newRoute;
     }
 
     // 更新累加概率数组
     public double[] updateRates() {
+        // 动态调整权重更新系数
+        if (t % 1000 == 0) {
+            ro = Math.max(0.1, ro * 0.9); // 每1000次迭代，权重更新系数减小
+        }
+
         // 更新权重
         for (int i = 0; i < cityNum; i++) {
             if (countArray[i] != 0) {
@@ -331,10 +387,9 @@ public class ALNS implements TspSolver {
     // 初始化变量
     public void initVar() {
         cityNum = locationList.size();// 城市数量为点的数量
-        bestGh = new int[cityNum];// 最好的路径编码
-        currGh = new int[cityNum];// 当前编码
-        tempGh = new int[cityNum];// 存放临时编码
-        dist = new double[cityNum][cityNum];// 距离矩阵
+        bestRoute = new int[cityNum];// 最好的路径编码
+        currRoute = new int[cityNum];// 当前编码
+        tempRoute = new int[cityNum];// 存放临时编码
         weights = new double[cityNum];// 权重数组
         rates = new double[cityNum];
         countArray = new int[cityNum];
@@ -348,76 +403,33 @@ public class ALNS implements TspSolver {
         }
         // 更新累加的概率数组
         rates = updateRates();
-        // 初始化距离矩阵
-        for (int i = 0; i < dist.length; i++) {
-            for (int j = i; j < dist[i].length; j++) {
-                if (i == j) {
-                    // 对角线为0
-                    dist[i][j] = tspProblem.getDist()[i][j];
-                } else {
-                    // 计算i到j的距离
-                    dist[i][j] = tspProblem.getDist()[i][j];
-                    dist[j][i] = tspProblem.getDist()[j][i];
-                }
-            }
-        }
+
         // 初始化参数
         bestT = 0;
         t = 0;
         random = new Random(System.currentTimeMillis());
         // 随机创造初始解
-        currGh[0] = 0;
-        List<Integer> pathList = new ArrayList<>();
-        pathList.add(0);
-        int index = 1;
-        while (index < cityNum) {
-            int r1 = random.nextInt(cityNum);
-            if (!pathList.contains(r1)) {
-                currGh[index++] = r1;
-                pathList.add(r1);
-            }
-        }
-        System.out.println("初始解为(" + TSPUtils.cost(currGh, tspProblem.getDist()) + ")：" + Arrays.toString(currGh));
+        currRoute[0] = 0;
+
+        // currRoute = SA.getNearestNeborInitRoute(cityNum, problem.getDist());
+
+        currRoute = TSPUtils.getRandomRoute(cityNum);
+
+        System.out.println("初始解为：" + Arrays.toString(currRoute));
+        System.out.println("初始解的路径长度为：" + evaluate(currRoute));
         // 复制当前路径编码给最优路径编码
-        tempGh = currGh.clone();
-        bestGh = currGh.clone();
-        currEvaluation = evaluate(currGh);
+        tempRoute = currRoute.clone();
+        bestRoute = currRoute.clone();
+        currEvaluation = evaluate(currRoute);
         bestEvaluation = currEvaluation;
         tempEvaluation = currEvaluation;
-        int[] randomBreakAndRepair = randomBreakAndRepair(currGh.clone());
-        System.out.println(
-                "随机破坏&修复1(" + TSPUtils.cost(randomBreakAndRepair, tspProblem.getDist()) + ")："
-                        + Arrays.toString(randomBreakAndRepair));
-        randomBreakAndRepair = randomBreakAndRepair2(currGh.clone());
-        System.out.println(
-                "随机破坏&修复2(" + TSPUtils.cost(randomBreakAndRepair, tspProblem.getDist()) + ")："
-                        + Arrays.toString(randomBreakAndRepair));
-    }
-
-    // 计算两点之间的距离（使用伪欧氏距离，可以减少计算量）
-    public double getDistance(double[] place1, double[] place2) {
-        // 伪欧氏距离在根号内除以了一个10
-        return Math.sqrt((Math.pow(place1[0] - place2[0], 2) + Math.pow(place1[1] - place2[1], 2)) / 10.0);
-        // return Math.sqrt((Math.pow(place1[0] - place2[0], 2) + Math.pow(place1[1] -
-        // place2[1], 2)));
+        // System.out.println("随机破坏和修复1：" +
+        // Arrays.toString(randomBreakAndRandomRepair(currRoute.clone())) + "路径长度为："
+        // + evaluate(randomBreakAndRandomRepair(currRoute.clone())));
     }
 
     // 评价函数
     public double evaluate(int[] path) {
-        double pathLen = 0.0;
-        for (int i = 1; i < path.length; i++) {
-            // 起点到终点途径路程累加
-            pathLen += dist[path[i - 1]][path[i]];
-        }
-        // 然后再加上返回起点的路程
-        pathLen += dist[path[path.length - 1]][path[0]];
-        return pathLen;
-
-        // double sum = 0;
-        // for (int i = 0; i < path.length - 1; i++) {
-        // sum += dist[path[i]][path[i + 1]];
-        // }
-        // sum += dist[path[path.length - 1]][path[0]];
-        // return sum;
+        return TSPUtils.cost(path, problem.getDist());
     }
 }

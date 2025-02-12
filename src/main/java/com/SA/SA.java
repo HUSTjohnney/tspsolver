@@ -53,10 +53,10 @@ public class SA implements TspSolver {
 	 * 
 	 * @return 输出遍历节点顺序
 	 */
-	public int[] getInitRoute() {
+	public static int[] getNearestNeborInitRoute(int cityNum, int[][] dist) {
 
-		int[] vis = new int[problem.getCityNum()];
-		int[] ret = new int[problem.getCityNum()];
+		int[] vis = new int[cityNum];
+		int[] ret = new int[cityNum];
 		Queue<Integer> q = new LinkedList<>();
 		q.add(0);
 		vis[0] = 1;
@@ -65,9 +65,9 @@ public class SA implements TspSolver {
 			int front = q.poll();
 			int min = Integer.MAX_VALUE;
 			int sIdx = 0;
-			for (int i = 0; i < problem.getCityNum(); i++) {
-				if (vis[i] == 0 && i != front && min > problem.getDist()[front][i]) {
-					min = problem.getDist()[front][i];
+			for (int i = 0; i < cityNum; i++) {
+				if (vis[i] == 0 && i != front && min > dist[front][i]) {
+					min = dist[front][i];
 					sIdx = i;
 				}
 			}
@@ -90,7 +90,7 @@ public class SA implements TspSolver {
 	@Override
 	public TspPlan solve() {
 		long startTime = System.currentTimeMillis();
-		int[] initRout = getInitRoute();
+		int[] initRout = getNearestNeborInitRoute(this.getProblem().getCityNum(), this.getProblem().getDist());
 		int[] bestpath, curentpath;
 		double t = INIT_TEMP;
 		bestpath = curentpath = Arrays.copyOf(initRout, initRout.length);
@@ -124,9 +124,9 @@ public class SA implements TspSolver {
 
 	public static void main(String[] args) throws IOException {
 		TspProblem problem = TSPUtils.read("src\\main\\resources\\tsp\\25Nodes\\p01.txt");
-		//TspProblem problem = TSPUtils.read("src\\main\\resources\\tsp\\eil51.txt");
+		// TspProblem problem = TSPUtils.read("src\\main\\resources\\tsp\\eil51.txt");
 		SA sa = new SA(problem);
-		int[] rout = sa.getInitRoute();
+		int[] rout = getNearestNeborInitRoute(problem.getCityNum(), problem.getDist());
 		SA.setINIT_TEMP(1e6);
 		SA.setDECRESE_RATE(0.99);
 		SA.setTEMP_LB(1e-6);

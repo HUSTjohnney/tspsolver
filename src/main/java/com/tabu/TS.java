@@ -9,6 +9,7 @@ import com.TSPUtils;
 import com.TspPlan;
 import com.TspProblem;
 import com.TspSolver;
+import com.sa.SA;
 
 public class TS implements TspSolver {
 
@@ -27,6 +28,16 @@ public class TS implements TspSolver {
      */
     private static int MAX_ITER = 100;
 
+    /**
+     * 初始路径数量
+     */
+    private static int INIT_ROUTENUM = 10;
+
+    /**
+     * 构造函数
+     * 
+     * @param problem
+     */
     public TS(TspProblem problem) {
         this.problem = problem;
     }
@@ -104,6 +115,30 @@ public class TS implements TspSolver {
                     }
                 }
 
+                // 遍历所有可能的3-opt操作
+                for (int i = 1; i < distanceMatrix.length - 2; i++) {
+                    for (int j = i + 1; j < distanceMatrix.length - 1; j++) {
+                        // k 为随机选择的大于 j 的索引
+                        int k = j + 1 + (int) (Math.random() * (distanceMatrix.length - j - 1));
+                        // 通过3-opt操作生成候选路径
+                        List<Integer> candidateRoute = threeOpt(currentRoute, i, j, k);
+                        // 计算候选路径的总距离
+                        double candidateDistance = calculateTotalDistance(candidateRoute, distanceMatrix);
+                        // 检查该操作是否不在禁忌表中或者该候选路径比当前最优路径更优
+                        if (tabuList[currentRoute.get(i)][currentRoute.get(k)] == 0
+                                || candidateDistance < bestDistance) {
+                            // 如果该候选路径的总距离比当前最优候选路径的总距离更优
+                            if (candidateDistance < bestCandidateDistance) {
+                                // 更新最优候选路径
+                                bestCandidate = candidateRoute;
+                                // 更新最优候选路径的总距离
+                                bestCandidateDistance = candidateDistance;
+                            }
+                        }
+
+                    }
+                }
+
                 // 更新当前路径为最优候选路径
                 if (bestCandidate != null) {
                     currentRoute = bestCandidate;
@@ -144,6 +179,26 @@ public class TS implements TspSolver {
         return globalBestRoute;
     }
 
+    // 3-opt邻域操作
+    private static List<Integer> threeOpt(List<Integer> route, int i, int j, int k) {
+        List<Integer> newRoute = new ArrayList<>(route);
+        // 这里可以根据3-opt的规则对路径进行调整，具体实现根据不同的3-opt变体有所不同
+        // 简单示例：可以将三个子路径进行不同的拼接组合
+        List<Integer> subList1 = new ArrayList<>(newRoute.subList(0, i));
+        List<Integer> subList2 = new ArrayList<>(newRoute.subList(i, j));
+        List<Integer> subList3 = new ArrayList<>(newRoute.subList(j, k));
+        List<Integer> subList4 = new ArrayList<>(newRoute.subList(k, newRoute.size()));
+
+        // 这里只是一种简单的组合方式，实际应用中可能需要尝试多种组合
+        newRoute.clear();
+        newRoute.addAll(subList1);
+        newRoute.addAll(subList3);
+        newRoute.addAll(subList2);
+        newRoute.addAll(subList4);
+
+        return newRoute;
+    }
+
     @Override
     public TspPlan solve() {
         int[][] distance = problem.getDist();
@@ -151,7 +206,13 @@ public class TS implements TspSolver {
         List<Integer> bestPath = new ArrayList<>();
         List<List<Integer>> initialRoutes = new ArrayList<>();
         int n = distance.length;
-        for (int i = 0; i < 5; i++) { // 生成5个不同的初始解
+        int[] nearestNebor = SA.getNearestNeborInitRoute(n, distance);
+        List<Integer> nearestNeborlist = new ArrayList<>();
+        for (int i = 0; i < nearestNebor.length; i++) {
+            nearestNeborlist.add(nearestNebor[i]);
+        }
+        initialRoutes.add(nearestNeborlist);
+        for (int i = 0; i < INIT_ROUTENUM - 1; i++) { // 生成10个不同的初始解
             List<Integer> initialRoute = new ArrayList<>();
             for (int j = 0; j < n; j++) {
                 initialRoute.add(j);
@@ -159,6 +220,7 @@ public class TS implements TspSolver {
             java.util.Collections.shuffle(initialRoute);
             initialRoutes.add(initialRoute);
         }
+
         try {
             // 调用禁忌搜索算法求解最优路径
             bestPath = tabuSearch(distance, initialRoutes, TABU_TENURE, MAX_ITER);
@@ -200,8 +262,12 @@ public class TS implements TspSolver {
         TS.MAX_ITER = maxIterations;
     }
 
+    public static void setINIT_ROUTENUM(int initRouteNum) {
+        TS.INIT_ROUTENUM = initRouteNum;
+    }
+
     public static String getParam() {
-        return "TABU_TENURE: " + TABU_TENURE + ", MAX_ITER: " + MAX_ITER;
+        return "TABU_TENURE: " + TABU_TENURE + ", MAX_ITER: " + MAX_ITER + ", INIT_ROUTENUM: " + INIT_ROUTENUM;
     }
 
 }

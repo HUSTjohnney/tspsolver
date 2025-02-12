@@ -14,18 +14,12 @@ import java.util.Stack;
 // 注意类名必须为 Main, 不要有任何 package xxx 信息
 public class Main {
     public static void main(String[] args) {
-        Scanner in = new Scanner(System.in);
-        // 注意 hasNext 和 hasNextLine 的区别
-        while (in.hasNextInt()) { // 注意 while 处理多个 case
-            int a = in.nextInt();
-            int b = in.nextInt();
+        Main m = new Main();
 
-            "ssss".toCharArray();
-
-        }
-
-        System.out.println(5);
+        System.out.println(m.climbNum(10));
     }
+    
+    
 
     // 给出由小写字母组成的字符串 s，重复项删除操作会选择两个相邻且相同的字母，并删除它们。
     // 在 s 上反复执行重复项删除操作，直到无法继续删除。在完成所有重复项删除操作后返回最终的字符串。答案保证唯一。
@@ -119,6 +113,32 @@ public class Main {
         }
         return null;
 
+    }
+
+    // 爬楼梯：每次爬一阶或者二阶，请问到第n阶有多少爬法
+    // 动态规划
+    public int climbNum(int num) {
+        // f(0) = 0
+        // f(1) = 1
+        // f(2) = f(1)+1 // 2
+        // f(3) = max(f(2)+1,f(1)+1) // 3 // {111 12 21}
+        // f(n) = (f(n-1)+f(n-2)) // 4层 5种 {1111 121 211 112 22}
+
+        if (num == 0) {
+            return 0;
+        } else if (num == 1)
+            return 1;
+
+        int[] f = new int[num];
+        f[0] = 1;
+        f[1] = 1;
+
+        for (int i = 2; i < f.length; i++) {
+            f[i] = f[i - 1] + f[i - 2];
+            System.out.println("f[" + i + "]:" + f[i]);
+        }
+
+        return f[num - 1];
     }
 
     public int jump(int[] nums) {

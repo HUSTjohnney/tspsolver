@@ -18,6 +18,8 @@ public class CplexSolver implements TspSolver {
 
     private final TspProblem problem;
 
+    private static int MAX_TIME = 300; // 最大运行时间
+
     // 城市坐标<[x,y]>
     private final List<int[]> locationList;
 
@@ -51,7 +53,7 @@ public class CplexSolver implements TspSolver {
             IloCplex cplex = new IloCplex();
 
             // 设置求解参数
-            cplex.setParam(IloCplex.DoubleParam.TiLim, 600); // 设置求解时间限制为 600 秒，可以根据实际情况调整
+            cplex.setParam(IloCplex.DoubleParam.TiLim, MAX_TIME); // 设置求解时间限制为 600 秒，可以根据实际情况调整
             // cplex.setParam(IloCplex.IntParam.RootAlg, IloCplex.Algorithm.Barrier); //
             // 尝试使用不同的根求解算法，这里使用 Barrier 算法
             cplex.setParam(IloCplex.DoubleParam.EpGap, 0.0001); // 设置相对 MIP 间隙为 0，尽量找到最优解

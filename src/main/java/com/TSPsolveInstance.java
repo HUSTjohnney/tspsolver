@@ -19,7 +19,7 @@ public class TSPsolveInstance {
     public static void main(String[] args) throws IOException {
 
         // 算例的节点数量
-        int nodeNum = 50;
+        int nodeNum = 100;
 
         // 选择算法："CPLEX"/"SA"/"Greedy"/"GA"/"ACO/TS/ALNS"
         String algorithm = "TS";
@@ -52,6 +52,7 @@ public class TSPsolveInstance {
         } else if (algorithm.equals("TS")) {
             TS.setMAX_ITER(1000);
             TS.setTABU_TENURE(500);
+            TS.setINIT_ROUTENUM(10);
             para = TS.getParam();
         } else if (algorithm.equals("ALNS")) {
             para = "ALNS";
